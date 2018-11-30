@@ -1,13 +1,4 @@
-2018-11-06 09:36:32,173 ERROR: Exception on /edit_profile [POST] [in c:\users\jmiller.ad\microblog\venv\lib\site-packages\flask\app.py:1761]
-Traceback (most recent call last):
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\sqlalchemy\engine\base.py", line 1193, in _execute_context
-    context)
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\sqlalchemy\engine\default.py", line 509, in do_execute
-    cursor.execute(statement, parameters)
-sqlite3.IntegrityError: UNIQUE constraint failed: user.username
-
-The above exception was the direct cause of the following exception:
-
+2018-11-26 11:50:02,158 ERROR: Exception on /user/melon [GET] [in c:\users\jmiller.ad\microblog\venv\lib\site-packages\flask\app.py:1761]
 Traceback (most recent call last):
   File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\flask\app.py", line 2292, in wsgi_app
     response = self.full_dispatch_request()
@@ -23,88 +14,50 @@ Traceback (most recent call last):
     return self.view_functions[rule.endpoint](**req.view_args)
   File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\flask_login\utils.py", line 261, in decorated_view
     return func(*args, **kwargs)
-  File "C:\Users\JMILLER.AD\microblog\app\routes.py", line 85, in edit_profile
-    db.session.commit()
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\sqlalchemy\orm\scoping.py", line 153, in do
-    return getattr(self.registry(), name)(*args, **kwargs)
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\sqlalchemy\orm\session.py", line 943, in commit
-    self.transaction.commit()
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\sqlalchemy\orm\session.py", line 467, in commit
-    self._prepare_impl()
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\sqlalchemy\orm\session.py", line 447, in _prepare_impl
-    self.session.flush()
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\sqlalchemy\orm\session.py", line 2254, in flush
-    self._flush(objects)
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\sqlalchemy\orm\session.py", line 2381, in _flush
-    transaction.rollback(_capture_exception=True)
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\sqlalchemy\util\langhelpers.py", line 66, in __exit__
-    compat.reraise(exc_type, exc_value, exc_tb)
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\sqlalchemy\util\compat.py", line 249, in reraise
-    raise value
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\sqlalchemy\orm\session.py", line 2345, in _flush
-    flush_context.execute()
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\sqlalchemy\orm\unitofwork.py", line 395, in execute
-    rec.execute(self)
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\sqlalchemy\orm\unitofwork.py", line 560, in execute
-    uow
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\sqlalchemy\orm\persistence.py", line 177, in save_obj
-    mapper, table, update)
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\sqlalchemy\orm\persistence.py", line 768, in _emit_update_statements
-    execute(statement, multiparams)
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\sqlalchemy\engine\base.py", line 948, in execute
-    return meth(self, multiparams, params)
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\sqlalchemy\sql\elements.py", line 269, in _execute_on_connection
-    return connection._execute_clauseelement(self, multiparams, params)
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\sqlalchemy\engine\base.py", line 1060, in _execute_clauseelement
-    compiled_sql, distilled_params
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\sqlalchemy\engine\base.py", line 1200, in _execute_context
-    context)
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\sqlalchemy\engine\base.py", line 1413, in _handle_dbapi_exception
-    exc_info
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\sqlalchemy\util\compat.py", line 265, in raise_from_cause
-    reraise(type(exception), exception, tb=exc_tb, cause=cause)
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\sqlalchemy\util\compat.py", line 248, in reraise
+  File "C:\Users\JMILLER.AD\melly\app\main\routes.py", line 68, in user
+    next_url=next_url, prev_url=prev_url)
+  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\flask\templating.py", line 135, in render_template
+    context, ctx.app)
+  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\flask\templating.py", line 117, in _render
+    rv = template.render(context)
+  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\jinja2\environment.py", line 1008, in render
+    return self.environment.handle_exception(exc_info, True)
+  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\jinja2\environment.py", line 780, in handle_exception
+    reraise(exc_type, exc_value, tb)
+  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\jinja2\_compat.py", line 37, in reraise
     raise value.with_traceback(tb)
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\sqlalchemy\engine\base.py", line 1193, in _execute_context
-    context)
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\sqlalchemy\engine\default.py", line 509, in do_execute
-    cursor.execute(statement, parameters)
-sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) UNIQUE constraint failed: user.username [SQL: 'UPDATE user SET username=?, about_me=? WHERE user.id = ?'] [parameters: ('karina', 'd', 1)] (Background on this error at: http://sqlalche.me/e/gkpj)
-2018-11-06 09:48:40,192 INFO: Microblog startup [in C:\Users\JMILLER.AD\microblog\app\__init__.py:45]
-2018-11-06 12:25:30,671 INFO: Microblog startup [in C:\Users\JMILLER.AD\microblog\app\__init__.py:45]
-2018-11-06 12:26:16,331 INFO: Microblog startup [in C:\Users\JMILLER.AD\microblog\app\__init__.py:45]
-2018-11-06 12:31:18,171 INFO: Microblog startup [in C:\Users\JMILLER.AD\microblog\app\__init__.py:45]
-2018-11-06 12:31:44,942 INFO: Microblog startup [in C:\Users\JMILLER.AD\microblog\app\__init__.py:45]
-2018-11-06 13:01:34,302 INFO: Microblog startup [in C:\Users\JMILLER.AD\microblog\app\__init__.py:45]
-2018-11-06 13:05:08,918 INFO: Microblog startup [in C:\Users\JMILLER.AD\microblog\app\__init__.py:45]
-2018-11-06 13:06:08,139 INFO: Microblog startup [in C:\Users\JMILLER.AD\microblog\app\__init__.py:45]
-2018-11-06 13:06:48,017 INFO: Microblog startup [in C:\Users\JMILLER.AD\microblog\app\__init__.py:45]
-2018-11-06 15:01:50,069 INFO: Microblog startup [in C:\Users\JMILLER.AD\microblog\app\__init__.py:45]
-2018-11-06 15:05:06,161 INFO: Microblog startup [in C:\Users\JMILLER.AD\microblog\app\__init__.py:45]
-2018-11-06 15:17:34,850 INFO: Microblog startup [in C:\Users\JMILLER.AD\microblog\app\__init__.py:45]
-2018-11-06 15:54:25,044 INFO: Microblog startup [in C:\Users\JMILLER.AD\microblog\app\__init__.py:45]
-2018-11-06 15:55:29,603 ERROR: Exception on /explore [GET] [in c:\users\jmiller.ad\microblog\venv\lib\site-packages\flask\app.py:1761]
-Traceback (most recent call last):
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\flask\app.py", line 2292, in wsgi_app
-    response = self.full_dispatch_request()
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\flask\app.py", line 1815, in full_dispatch_request
-    rv = self.handle_user_exception(e)
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\flask\app.py", line 1718, in handle_user_exception
+  File "C:\Users\JMILLER.AD\melly\app\templates\_post.html", line 15, in template
+    username=user_link, when=moment(post.timestamp).format('MMMM Do YYYY, h:mm:ss a') }}
+  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\jinja2\environment.py", line 1005, in render
+    return concat(self.root_render_func(self.new_context(vars)))
+  File "C:\Users\JMILLER.AD\melly\app\templates\user.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\JMILLER.AD\melly\app\templates\base.html", line 1, in top-level template code
+    {% extends 'bootstrap/base.html' %}
+  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\flask_bootstrap\templates\bootstrap\base.html", line 1, in top-level template code
+    {% block doc -%}
+  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\flask_bootstrap\templates\bootstrap\base.html", line 4, in block "doc"
+    {%- block html %}
+  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\flask_bootstrap\templates\bootstrap\base.html", line 20, in block "html"
+    {% block body -%}
+  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\flask_bootstrap\templates\bootstrap\base.html", line 23, in block "body"
+    {% block content -%}
+  File "C:\Users\JMILLER.AD\melly\app\templates\base.html", line 48, in block "content"
+    {% block app_content %}{% endblock %}
+  File "C:\Users\JMILLER.AD\melly\app\templates\user.html", line 27, in block "app_content"
+    {% include '_post.html' %}
+  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\jinja2\environment.py", line 780, in handle_exception
     reraise(exc_type, exc_value, tb)
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\flask\_compat.py", line 35, in reraise
-    raise value
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\flask\app.py", line 1813, in full_dispatch_request
-    rv = self.dispatch_request()
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\flask\app.py", line 1799, in dispatch_request
-    return self.view_functions[rule.endpoint](**req.view_args)
-  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\flask_login\utils.py", line 261, in decorated_view
-    return func(*args, **kwargs)
-  File "C:\Users\JMILLER.AD\microblog\app\routes.py", line 125, in explore
-    posts = Post.query.order_by(Post.tiemstamp.desc()).all()
-AttributeError: type object 'Post' has no attribute 'tiemstamp'
-2018-11-06 15:56:52,301 INFO: Microblog startup [in C:\Users\JMILLER.AD\microblog\app\__init__.py:45]
-2018-11-06 15:58:03,971 INFO: Microblog startup [in C:\Users\JMILLER.AD\microblog\app\__init__.py:45]
-2018-11-06 15:58:42,053 INFO: Microblog startup [in C:\Users\JMILLER.AD\microblog\app\__init__.py:45]
-2018-11-06 16:00:12,667 INFO: Microblog startup [in C:\Users\JMILLER.AD\microblog\app\__init__.py:45]
-2018-11-06 16:00:45,265 INFO: Microblog startup [in C:\Users\JMILLER.AD\microblog\app\__init__.py:45]
-2018-11-06 16:01:51,661 INFO: Microblog startup [in C:\Users\JMILLER.AD\microblog\app\__init__.py:45]
+  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\jinja2\_compat.py", line 37, in reraise
+    raise value.with_traceback(tb)
+  File "C:\Users\JMILLER.AD\melly\app\templates\_post.html", line 15, in template
+    username=user_link, when=moment(post.timestamp).format('MMMM Do YYYY, h:mm:ss a') }}
+  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\jinja2\environment.py", line 497, in _parse
+    return Parser(self, source, name, encode_filename(filename)).parse()
+  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\jinja2\parser.py", line 901, in parse
+    result = nodes.Template(self.subparse(), lineno=1)
+  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\jinja2\parser.py", line 876, in subparse
+    self.stream.expect('variable_end')
+  File "c:\users\jmiller.ad\microblog\venv\lib\site-packages\jinja2\lexer.py", line 384, in expect
+    self.name, self.filename)
+jinja2.exceptions.TemplateSyntaxError: expected token 'end of print statement', got '='

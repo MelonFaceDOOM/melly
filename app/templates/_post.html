@@ -1,11 +1,19 @@
-    <table>
-        <tr valign="top">
-            <td><img src="{{ post.author.avatar(36) }}"></td>
-            <td>
-                <a href="{{ url_for('user', username=post.author.username) }}">
-                    {{ post.author.username }}
+    <table class="table table-hover" style="table-layout:fixed">
+        <tr>
+            <td width="80px">
+                <a href="{{ url_for('main.user', username=post.author.username) }}">
+                    <img src="{{ post.author.avatar(70) }}" />
                 </a>
-                <br>{{ post.body }}
+            </td>
+            <td style="word-wrap: break-word">
+                {% set user_link %}
+                    <a href="{{ url_for('main.user', username=post.author.username) }}">
+                        {{ post.author.username }}
+                    </a>
+                {% endset %}
+                {{ user_link }} said {{ moment(post.timestamp).format('MMMM Do YYYY, h:mm:ss a') }}
+                <br>
+                <span id="post{{ post.id }}">{{ post.body }}</span>
             </td>
         </tr>
     </table>
