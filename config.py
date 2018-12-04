@@ -17,6 +17,8 @@ class Config(object):
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     ADMINS = ['lemmyelon@gmail.com']
     POSTS_PER_PAGE = 25
+    THREADS_PER_PAGE = 25
+    CATEGORIES_PER_PAGE = 25
 
     
     # MAIL_SERVER = "smtp.googlemail.com"

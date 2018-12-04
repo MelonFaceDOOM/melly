@@ -13,13 +13,14 @@ followers = db.Table(
     db.Column('followed_id', db.Integer, db.ForeignKey('user.id'))
 )
 
-
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
     posts = db.relationship('Post', backref='author', lazy='dynamic')
+    threads = db.relationship('Thread', backref='author', lazy='dynamic')
+    categories = db.relationship('Category', backref='author', lazy='dynamic')
     about_me = db.Column(db.String(140))
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
     followed = db.relationship(
@@ -80,33 +81,36 @@ class User(UserMixin, db.Model):
 @login.user_loader
 def load_user(id):
     return User.query.get(int(id))
-
-
-class Post(db.Model):
+        
+class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    body = db.Column(db.String(140))
+    title = db.Column(db.String(140), index=True, unique=True)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    thread_id = db.column(db.Integer, db.ForeignKey('thread.id'))
+    threads = db.relationship('Thread', backref='category', lazy='dynamic')
 
     def __repr__(self):
-        return '<Post {}>'.format(self.body)
+        return '<Category {}>'.format(self.title)
         
 class Thread(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(140))
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    thread_category_id = db.column(db.Integer, db.ForeignKey('thread_category.id'))
+    category_id = db.Column(db.Integer, db.ForeignKey('category.id'))
+    posts = db.relationship('Post', backref='thread', lazy='dynamic')
 
     def __repr__(self):
-        return '<Thread {}>'.format(self.body)   
+        return '<Thread {}>'.format(self.title) 
         
-class thread_category(db.Model):
+class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(140))
+    body = db.Column(db.String(140))
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    thread_id = db.Column(db.Integer, db.ForeignKey('thread.id'))
 
     def __repr__(self):
-        return '<Thread category {}>'.format(self.body)
+        return '<Post {}>'.format(self.body)
+        
+  
