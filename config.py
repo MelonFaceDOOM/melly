@@ -16,7 +16,7 @@ class Config(object):
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     ADMINS = ['lemmyelon@gmail.com']
-    POSTS_PER_PAGE = 25
+    POSTS_PER_PAGE = 5
     THREADS_PER_PAGE = 25
     CATEGORIES_PER_PAGE = 25
 

@@ -92,6 +92,10 @@ class Category(db.Model):
     def __repr__(self):
         return '<Category {}>'.format(self.title)
         
+    def post_count(self):
+        count = sum([t.posts.count() for t in self.threads])
+        return count
+        
 class Thread(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(140))
@@ -101,7 +105,11 @@ class Thread(db.Model):
     posts = db.relationship('Post', backref='thread', lazy='dynamic')
 
     def __repr__(self):
-        return '<Thread {}>'.format(self.title) 
+        return '<Thread {}>'.format(self.title)
+    
+    def post_count(self):
+        count = self.posts.count()
+        return count
         
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -113,4 +121,4 @@ class Post(db.Model):
     def __repr__(self):
         return '<Post {}>'.format(self.body)
         
-  
+

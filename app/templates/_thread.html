@@ -1,0 +1,26 @@
+    <table class="table table-hover" style="table-layout:fixed">
+        <tr>
+            <td>
+                <a href="{{ url_for('main.thread', category_title=category_title, thread_title=thread.title) }}">
+                    {{ thread.title }}
+                </a>
+            </td>
+            <td>
+                {{ thread.post_count() }}
+            </td>
+            <td>
+                {{ moment(thread.timestamp).format('MMMM Do YYYY, h:mm:ss a') }}
+            </td>
+            <td style="word-wrap: break-word" width="150px">
+                {% set user_link %}
+                    <a href="{{ url_for('main.user', username=thread.author.username) }}">
+                        {{ thread.author.username }}
+                    </a>
+                {% endset %}
+                {{ user_link }}
+                <a href="{{ url_for('main.user', username=thread.author.username) }}">
+                    <img src="{{ thread.author.avatar(18) }}" />
+                </a>
+            </td>
+        </tr>
+    </table>

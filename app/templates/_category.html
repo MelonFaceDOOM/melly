@@ -1,0 +1,26 @@
+        <tr>
+            <th>
+                <a href="{{ url_for('main.category', category_title=category.title) }}">
+                    {{ category.title }}
+                </a>
+            </th>
+            <th>
+                {{ category.threads.count() }}
+            </th>
+            <th>
+                {{ category.post_count() }}
+            </th>
+            <th>
+                {{ moment(category.timestamp).format('MMMM Do YYYY, h:mm:ss a') }}
+            </th>
+            <th width=20px>
+                <a href="{{ url_for('main.user', username=category.author.username) }}">
+                    <img src="{{ category.author.avatar(18) }}" />
+                </a>
+            </th>
+            <th style="word-wrap: break-word">
+                <a href="{{ url_for('main.user', username=category.author.username) }}">
+                    {{ category.author.username }}
+                </a>
+            </th>
+        </tr>

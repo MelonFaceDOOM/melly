@@ -2,7 +2,7 @@ from flask import request
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, TextAreaField
 from wtforms.validators import ValidationError, DataRequired, Length
-from app.models import User, Thread, Category
+from app.models import User, Category
 
 
 class EditProfileForm(FlaskForm):
@@ -30,20 +30,7 @@ class CreateCategoryForm(FlaskForm):
     title = StringField('Category title', validators=[DataRequired()])
     submit = SubmitField('Submit')
     
-    def validate_title(self,category_title):
+    def validate_title(self, category_title):
         category = Category.query.filter_by(title=self.title.data).first()
         if category is not None:
             raise ValidationError('Please use a different category name.')
-            
-class CreateThreadForm(FlaskForm):
-    title = StringField('Thread title', validators=[DataRequired()])
-    submit = SubmitField('Submit')
-    
-    def __init__(self, category_title, *args, **kwargs):
-        super(CreateThreadForm, self).__init__(*args, **kwargs)
-        self.category_title = category_title
-    
-    def validate_title(self,thread_title):
-        thread = Thread.query.join(Category).filter(Category.title == self.category_title, Thread.title==self.title.data).first()
-        if thread is not None:
-            raise ValidationError('Please use a different thread name.')

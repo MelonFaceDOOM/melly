@@ -2,22 +2,26 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-    {% for post in posts %}
-        {% include '_post.html' %}
+    {% for thread in threads %}
+        {% include '_thread.html' %}
     {% endfor %}
-    {% if form %}
-    {{ wtf.quick_form(form) }}
-    {% endif %}
+    <div class="row">
+        <div class="col-md-4">
+            <a href="{{ url_for('main.create_thread', category_title=category_title) }}">
+                Create new thread
+            </a>
+        </div>
+    </div>
     <nav aria-label="...">
         <ul class="pager">
             <li class="previous{% if not prev_url %} disabled{% endif %}">
                 <a href="{{ prev_url or '#' }}">
-                    <span aria-hidden="true">&larr;</span> Older posts
+                    <span aria-hidden="true">&larr;</span> Older threads
                 </a>
             </li>
             <li class="next{% if not next_url %} disabled{% endif %}">
                 <a href="{{ next_url or '#' }}">
-                    Newer posts <span aria-hidden="true">&rarr;</span>
+                    Newer threads <span aria-hidden="true">&rarr;</span>
                 </a>
             </li>
         </ul>
