@@ -4,7 +4,7 @@ from flask import render_template, flash, redirect, url_for, request, g, \
 from flask_login import current_user, login_required
 from app import db
 from app.main.forms import EditProfileForm, PostForm, CreateCategoryForm, CreateThreadForm
-from app.models import User, Post, Thread, Category
+from app.models import User, Post, Thread, Category, User_Thread_Position
 from app.main import bp
 
 
@@ -162,29 +162,36 @@ def create_thread(category_title):#todo - update to include an initial post?
 @bp.route('/<category_title>/<thread_title>', methods=['GET', 'POST'])
 @login_required 
 def thread(category_title,thread_title):
-
+    #If thread or category are not found, return to index
     thread = Thread.query.join(Category).filter(Category.title==category_title,
                                                 Thread.title==thread_title).first()
     if thread is None:
         flash('thread "{}" not found in {}.'.format(thread_title,category_title))
         return redirect(url_for('main.index'))
-        
     category = Category.query.filter_by(title=category_title).first()
     if category is None:
         flash('category {} not found.'.format(category_title))
-        return redirect(url_for('main.index'))
-        
-    form = PostForm()
-    page = request.args.get('page', 1, type=int)
+        return redirect(url_for('main.index'))        
+
+    #find the last-read post by the user, and go to that page
+    user_thread_query = User_Thread_Position.query.filter_by(user=current_user,thread=thread).first()
+    if user_thread_query is None:
+        page = request.args.get('page', 1, type=int) #get page from url. if not present, default to one.
+    else:
+        last_post_read = user_thread_query.last_post_read
+        page_num = 1 + int((last_post_read-1) / current_app.config['POSTS_PER_PAGE'])
+        page = request.args.get('page', page_num, type=int) #get page from url. if not present, default to last read post
     posts = thread.posts.paginate(
         page, current_app.config['POSTS_PER_PAGE'], False)
+        
     next_url = url_for('main.thread', category_title=category_title, thread_title=thread_title,
                        page=posts.next_num) \
         if posts.has_next else None
     prev_url = url_for('main.thread', category_title=category_title, thread_title=thread_title,
                        page=posts.prev_num) \
         if posts.has_prev else None
-
+    
+    form = PostForm()
     if form.validate_on_submit():
         post = Post(body=form.post.data, author=current_user,thread=thread)
         db.session.add(post)
@@ -193,8 +200,21 @@ def thread(category_title,thread_title):
         
         last_page = int(posts.total/current_app.config['POSTS_PER_PAGE']+1)
         return redirect(url_for('main.thread',category_title=category_title,thread_title=thread_title,page=last_page))
-        
+    
+    last_post_read = page * current_app.config['POSTS_PER_PAGE']
+    if user_thread_query is None:
+        utp = User_Thread_Position(user=current_user,thread=thread,last_post_read=last_post_read,user_views=1)
+        db.session.add(utp)
+        db.session.commit()
+    else:
+        user_thread_query.user_views += 1
+        if user_thread_query.last_post_read >= last_post_read:
+            pass
+        else:
+            user_thread_query.last_post_read = last_post_read
+        db.session.commit()
+    
     return render_template('thread.html', title=thread_title, form=form,
-                           posts=posts.items, next_url=next_url, category=category,
+                           posts=posts, category=category, next_url=next_url,
                            prev_url=prev_url)
     

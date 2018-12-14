@@ -28,6 +28,7 @@ class User(UserMixin, db.Model):
         primaryjoin=(followers.c.follower_id == id),
         secondaryjoin=(followers.c.followed_id == id),
         backref=db.backref('followers', lazy='dynamic'), lazy='dynamic')
+    threads_viewed = db.relationship('User_Thread_Position', backref='user', lazy='dynamic')
 
     def __repr__(self):
         return '<User {}>'.format(self.username)
@@ -103,6 +104,7 @@ class Thread(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'))
     posts = db.relationship('Post', backref='thread', lazy='dynamic')
+    users_visited = db.relationship('User_Thread_Position', backref='thread', lazy='dynamic')
 
     def __repr__(self):
         return '<Thread {}>'.format(self.title)
@@ -110,6 +112,15 @@ class Thread(db.Model):
     def post_count(self):
         count = self.posts.count()
         return count
+        
+class User_Thread_Position(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    thread_id = db.Column(db.Integer, db.ForeignKey('thread.id'))
+    last_post_read = db.Column(db.Integer)
+    user_views = db.Column(db.Integer)
+    __table_args__ = (db.UniqueConstraint('user_id', 'thread_id', name='_user_thread_position'),
+                     )
         
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
