@@ -212,7 +212,7 @@ def thread(category_title,thread_title):
             pass
         else:
             user_thread_query.last_post_read = last_post_read
-        db.session.commit()
+            .session.commit()
     
     return render_template('thread.html', title=thread_title, form=form,
                            posts=posts, category=category, next_url=next_url,
