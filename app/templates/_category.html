@@ -4,15 +4,6 @@
                     {{ category.title }}
                 </a>
             </th>
-            <th>
-                {{ category.threads.count() }}
-            </th>
-            <th>
-                {{ category.post_count() }}
-            </th>
-            <th>
-                {{ moment(category.timestamp).format('MMMM Do YYYY, h:mm:ss a') }}
-            </th>
             <th width=20px>
                 <a href="{{ url_for('main.user', username=category.author.username) }}">
                     <img src="{{ category.author.avatar(18) }}" />
@@ -22,5 +13,34 @@
                 <a href="{{ url_for('main.user', username=category.author.username) }}">
                     {{ category.author.username }}
                 </a>
+            </th>
+            <th>
+                {{ category.threads.count() }}
+            </th>
+            <th>
+                {{ category.post_count() }}
+            </th>
+            <th>
+                {% set last_post = category.last_post() %}
+                {% if last_post %}
+                    {% set thread_link %}
+                        <a href="{{ url_for('main.thread', category_title=last_post.thread.category.title, thread_title=last_post.thread.title) }}">
+                            {{ last_post.thread.title }}
+                        </a>
+                    {% endset %}
+                    
+                    {% set user_link %}
+                        <a href="{{ url_for('main.user', username=last_post.author.username) }}">
+                            {{ last_post.author.username }}
+                        </a>
+                    {% endset %}
+
+                    {{ thread_link }}
+                     by {{ user_link }}
+                    {{ moment(last_post.timestamp).format('MMMM Do YYYY, h:mm:ss a') }}
+                {% else %}
+                    N/A
+                {% endif %} 
+                
             </th>
         </tr>

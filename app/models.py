@@ -96,7 +96,14 @@ class Category(db.Model):
     def post_count(self):
         count = sum([t.posts.count() for t in self.threads])
         return count
-        
+    
+    def last_post(self):
+        #Post where Post.thread_id == (Thread where Thread.category_id == self.id).id
+        last_post_in_category = Post.query.join(Thread,Thread.id==Post.thread_id).filter(
+            Thread.category_id == self.id).order_by(
+            Post.timestamp.desc()).first()
+        return last_post_in_category
+    
 class Thread(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(140))
@@ -112,6 +119,10 @@ class Thread(db.Model):
     def post_count(self):
         count = self.posts.count()
         return count
+        
+    def last_post(self):
+        last_post_in_thread = Post.query.filter_by(thread_id=self.id).order_by(Post.timestamp.desc()).first()
+        return last_post_in_thread
         
 class User_Thread_Position(db.Model):
     id = db.Column(db.Integer, primary_key=True)
