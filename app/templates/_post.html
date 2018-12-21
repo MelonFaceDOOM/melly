@@ -15,5 +15,10 @@
                 <br>
                 <span id="post{{ post.id }}">{{ post.body }}</span>
             </td>
+            <td>
+                <a href="{{ url_for('main.quote_post', post_id=post.id) }}">
+                    Quote
+                </a>
+            </td>
         </tr>
     </table>

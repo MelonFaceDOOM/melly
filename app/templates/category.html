@@ -2,12 +2,23 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-    {% for thread in threads %}
-        {% include '_thread.html' %}
-    {% endfor %}
+    
+    <table class="table table-hover" style="table-layout:fixed">
+        <tr>
+            <th>Thread</th>
+            <th width=20px></th>
+            <th>Author</th>
+            <th>Post count</th>
+            <th>Last Post</th>
+        {% for thread in threads %}
+            {% include '_thread.html' %}
+        {% endfor %}
+        </tr>
+
+    </table>
     <div class="row">
         <div class="col-md-4">
-            <a href="{{ url_for('main.create_thread', category_title=category_title) }}">
+            <a href="{{ url_for('main.create_thread', category_id=category.id) }}">
                 Create new thread
             </a>
         </div>

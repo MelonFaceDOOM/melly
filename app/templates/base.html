@@ -23,11 +23,11 @@
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                 <ul class="nav navbar-nav">
                     <li><a href="{{ url_for('main.index') }}">Home</a></li>
-                    {% if category %}
-                    <li><a href="{{ url_for('main.category',category_title=category.title) }}">{{ category.title }}</a></li>
-                    {% endif %}
                     {% if thread %}
-                    <li><a href="{{ url_for('main.explore',category_title=category.title, thread_title=thread.title) }}">{{ thread.title }}</a></li>
+                    <li><a href="{{ url_for('main.category',category_id=thread.category.id) }}">{{ thread.category.title }}</a></li>
+                    <li class="disabled"><a href="{{ url_for('main.thread',thread_id=thread.id) }}">{{ thread.title }}</a></li>
+                    {% elif category %}
+                    <li class="disabled"><a href="{{ url_for('main.category',category_id=category.id) }}">{{ category.title }}</a></li>
                     {% endif %}
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
@@ -48,9 +48,9 @@
     <div class="container">
         {% with messages = get_flashed_messages() %}
         {% if messages %}
-            {% for message in messages %}
-            <div class="alert alert-info" role="alert">{{ message }}</div>
-            {% endfor %}
+        {% for message in messages %}
+        <div class="alert alert-info" role="alert">{{ message }}</div>
+        {% endfor %}
         {% endif %}
         {% endwith %}
 

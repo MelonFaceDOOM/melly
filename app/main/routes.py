@@ -108,8 +108,8 @@ def unfollow(username):
     db.session.commit()
     flash('You are not following {}.'.format(username))
     return redirect(url_for('main.user', username=username))
-    
-    
+
+
 @bp.route('/create_category', methods=['GET', 'POST'])
 @login_required
 def create_category():
@@ -119,102 +119,120 @@ def create_category():
         db.session.add(category)
         db.session.commit()
         flash('Your category, {} has been created! Make a first thread!'.format(form.title.data))
-        return redirect(url_for('main.category',category_title=form.title.data)) #update with url for new category?
+        return redirect(url_for('main.category', category_id=category.id))  # update with url for new category?
     return render_template('create_category.html', title='Create Category',
                            form=form)
 
-@bp.route('/<category_title>')
+
+@bp.route('/cat/<category_id>')
 @login_required
-def category(category_title):
-    category = Category.query.filter_by(title=category_title).first()
+def category(category_id):
+    category = Category.query.filter_by(id=category_id).first()
     if category is None:
-        flash('category {} not found.'.format(category_title))
+        flash('category {} not found.'.format(category_id))
         return redirect(url_for('main.index'))
 
     page = request.args.get('page', 1, type=int)
-    threads = Thread.query.join(Category).filter(Category.title == category_title).paginate(
+    threads = category.threads.order_by(Thread.timestamp.asc()).paginate(
         page, current_app.config['THREADS_PER_PAGE'], False)
-    next_url = url_for('main.category', page=threads.next_num, category_title=category_title) \
+    next_url = url_for('main.category', page=threads.next_num, category_id=category_id) \
         if threads.has_next else None
-    prev_url = url_for('main.category', page=threads.prev_num, category_title=category_title) \
+    prev_url = url_for('main.category', page=threads.prev_num, category_id=category_id) \
         if threads.has_prev else None
-    return render_template('category.html', title=category_title, category_title=category_title, threads=threads.items,
+    return render_template('category.html', title=category.title, category=category, threads=threads.items,
                            next_url=next_url, prev_url=prev_url)
 
-@bp.route('/<category_title>/create_thread', methods=['GET', 'POST'])
-@login_required                           
-def create_thread(category_title):#todo - update to include an initial post?
-    category = Category.query.filter_by(title=category_title).first()
+
+@bp.route('/cat/<category_id>/create_thread', methods=['GET', 'POST'])
+@login_required
+def create_thread(category_id):  # todo - update to include an initial post?
+    category = Category.query.filter_by(id=category_id).first()
     if category is None:
-        flash('category {} not found.'.format(category_title))
+        flash('category {} not found.'.format(category_id))
         return redirect(url_for('main.index'))
 
-    form = CreateThreadForm(category_title)
+    form = CreateThreadForm(category.title)
     if form.validate_on_submit():
-        thread = Thread(title=form.title.data, author=current_user,category=category)
+        thread = Thread(title=form.title.data, author=current_user, category=category)
         db.session.add(thread)
         db.session.commit()
         flash('Your thread {} has been created! Make a first post!'.format(form.title.data))
-        return redirect(url_for('main.thread',category_title=category_title,thread_title=form.title.data))
+        return redirect(url_for('main.thread', thread_id=thread.id))
     return render_template('create_thread.html', title='Create thread',
-                           category_title=category_title, form=form)
+                           category_id=category_id, form=form)
 
-@bp.route('/<category_title>/<thread_title>', methods=['GET', 'POST'])
-@login_required 
-def thread(category_title,thread_title):
-    #If thread or category are not found, return to index
-    thread = Thread.query.join(Category).filter(Category.title==category_title,
-                                                Thread.title==thread_title).first()
+
+@bp.route('/thread/<thread_id>', methods=['GET', 'POST'])
+@login_required
+def thread(thread_id):
+    # If thread is not found, return to index
+    thread = Thread.query.filter_by(id=thread_id).first()
     if thread is None:
-        flash('thread "{}" not found in {}.'.format(thread_title,category_title))
+        flash('thread "{}" not found'.format(thread_id))
         return redirect(url_for('main.index'))
-    category = Category.query.filter_by(title=category_title).first()
-    if category is None:
-        flash('category {} not found.'.format(category_title))
-        return redirect(url_for('main.index'))        
 
-    #find the last-read post by the user, and go to that page
-    user_thread_query = User_Thread_Position.query.filter_by(user=current_user,thread=thread).first()
-    if user_thread_query is None:
-        page = request.args.get('page', 1, type=int) #get page from url. if not present, default to one.
+    category = thread.category
+
+
+    last_page_viewed = current_user.last_page_viewed(thread_id=thread_id)
+    if last_page_viewed:
+        page = request.args.get('page', last_page_viewed, type=int)
     else:
-        last_post_read = user_thread_query.last_post_read
-        page_num = 1 + int((last_post_read-1) / current_app.config['POSTS_PER_PAGE'])
-        page = request.args.get('page', page_num, type=int) #get page from url. if not present, default to last read post
-    posts = thread.posts.paginate(
+        page = request.args.get('page', 1, type=int)
+
+    posts = thread.posts.order_by(Post.timestamp.asc()).paginate(
         page, current_app.config['POSTS_PER_PAGE'], False)
-        
-    next_url = url_for('main.thread', category_title=category_title, thread_title=thread_title,
+
+    next_url = url_for('main.thread', thread_id=thread_id,
                        page=posts.next_num) \
         if posts.has_next else None
-    prev_url = url_for('main.thread', category_title=category_title, thread_title=thread_title,
+    prev_url = url_for('main.thread', thread_id=thread_id,
                        page=posts.prev_num) \
         if posts.has_prev else None
-    
+
     form = PostForm()
     if form.validate_on_submit():
-        post = Post(body=form.post.data, author=current_user,thread=thread)
+        post = Post(body=form.post.data, author=current_user, thread=thread)
         db.session.add(post)
         db.session.commit()
         flash('Your post is now live!')
-        
-        last_page = int(posts.total/current_app.config['POSTS_PER_PAGE']+1)
-        return redirect(url_for('main.thread',category_title=category_title,thread_title=thread_title,page=last_page))
-    
-    last_post_read = page * current_app.config['POSTS_PER_PAGE']
-    if user_thread_query is None:
-        utp = User_Thread_Position(user=current_user,thread=thread,last_post_read=last_post_read,user_views=1)
-        db.session.add(utp)
-        db.session.commit()
-    else:
-        user_thread_query.user_views += 1
-        if user_thread_query.last_post_read >= last_post_read:
-            pass
-        else:
-            user_thread_query.last_post_read = last_post_read
-            db.session.commit()
-    
-    return render_template('thread.html', title=thread_title, form=form,
-                           posts=posts, category=category, next_url=next_url,
+
+        return redirect(url_for('main.thread', thread_id=thread_id, page=thread.last_page()))
+
+    last_post_viewed = page * current_app.config['POSTS_PER_PAGE']
+
+    current_user.view_increment(thread_id=thread_id)
+    current_user.update_last_post_viewed(thread_id=thread_id,last_post_viewed=last_post_viewed)
+
+    return render_template('thread.html', title=thread.title, form=form,
+                           posts=posts, next_url=next_url, thread=thread,
                            prev_url=prev_url)
-    
+
+
+@bp.route('/quote/<post_id>', methods=['GET', 'POST'])
+@login_required
+def quote_post(post_id):  # todo - change to a dedicated post page and just put the quote text in.
+    post = Post.query.filter_by(id=post_id).first()
+    if post is None:
+        flash('post {} not found.'.format(post_id))
+        return redirect(url_for('main.index'))
+
+    thread = Post.query.filter_by(
+        id=post_id).first().thread  # todo - user should be able to quote a post into any thread, not just the same
+                                    # thread as the original post
+    if thread is None:
+        flash('thread for post {} not found.'.format(post_id))
+        return redirect(url_for('main.index'))
+
+    form = PostForm()
+    if form.validate_on_submit():
+        post = Post(body=form.post.data, author=current_user, thread=thread)
+        db.session.add(post)
+        db.session.commit()
+        flash('Your post is now live!')
+        return redirect(
+            url_for('main.thread', thread_id=thread.id, page=thread.last_page()))  # todo - redirect to last page
+    elif request.method == 'GET':
+        body = '[{}, {}: {}]'.format(post.author.username, post.timestamp, post.body)
+        form.post.data = body
+    return render_template('quote_post.html', title='Quote Post', form=form, thread=thread)

@@ -1,6 +1,6 @@
         <tr>
             <th>
-                <a href="{{ url_for('main.category', category_title=category.title) }}">
+                <a href="{{ url_for('main.category', category_id=category.id) }}">
                     {{ category.title }}
                 </a>
             </th>
@@ -24,7 +24,7 @@
                 {% set last_post = category.last_post() %}
                 {% if last_post %}
                     {% set thread_link %}
-                        <a href="{{ url_for('main.thread', category_title=last_post.thread.category.title, thread_title=last_post.thread.title) }}">
+                        <a href="{{ url_for('main.thread', thread_id=last_post.thread.id) }}">
                             {{ last_post.thread.title }}
                         </a>
                     {% endset %}

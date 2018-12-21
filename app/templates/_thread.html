@@ -1,26 +1,38 @@
-    <table class="table table-hover" style="table-layout:fixed">
         <tr>
-            <td>
-                <a href="{{ url_for('main.thread', category_title=category_title, thread_title=thread.title) }}">
+            <th>
+                <a href="{{ url_for('main.thread', thread_id=thread.id) }}">
                     {{ thread.title }}
                 </a>
-            </td>
-            <td>
-                {{ thread.post_count() }}
-            </td>
-            <td>
-                {{ moment(thread.timestamp).format('MMMM Do YYYY, h:mm:ss a') }}
-            </td>
-            <td style="word-wrap: break-word" width="150px">
-                {% set user_link %}
-                    <a href="{{ url_for('main.user', username=thread.author.username) }}">
-                        {{ thread.author.username }}
-                    </a>
-                {% endset %}
-                {{ user_link }}
+            </th>
+            <th width=20px>
                 <a href="{{ url_for('main.user', username=thread.author.username) }}">
                     <img src="{{ thread.author.avatar(18) }}" />
                 </a>
-            </td>
+            </th>
+            <th style="word-wrap: break-word">
+                <a href="{{ url_for('main.user', username=thread.author.username) }}">
+                    {{ thread.author.username }}
+                </a>
+            </th>
+            <th>
+                {{ thread.post_count() }}
+            </th>
+            <th>
+                {% set last_post = thread.last_post() %}
+                {% if last_post %}
+                    
+                    {% set user_link %}
+                        <a href="{{ url_for('main.user', username=last_post.author.username) }}">
+                            {{ last_post.author.username }}
+                        </a>
+                    {% endset %}
+
+                    {{ thread_link }}
+                     by {{ user_link }}
+                    {{ moment(last_post.timestamp).format('MMMM Do YYYY, h:mm:ss a') }}
+                {% else %}
+                    N/A
+                {% endif %} 
+                
+            </th>
         </tr>
-    </table>

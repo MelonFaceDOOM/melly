@@ -6,6 +6,7 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 from app import db, login
+from sqlalchemy.ext.hybrid import hybrid_property
 
 followers = db.Table(
     'followers',
@@ -63,6 +64,46 @@ class User(UserMixin, db.Model):
         own = Post.query.filter_by(user_id=self.id)
         return followed.union(own).order_by(Post.timestamp.desc())
 
+    #todo - add views(thread_id)
+
+    def last_page_viewed(self, thread_id):
+        utp = User_Thread_Position.query.filter_by(user_id=self.id,thread_id=thread_id).first()
+        if utp is None:
+            page_num = None
+        else:
+            last_post_viewed = utp.last_post_viewed
+            if last_post_viewed is None:
+                page_num = 1
+            else:
+                page_num = 1 + int((last_post_viewed-1) / current_app.config['POSTS_PER_PAGE']) # doing this allows for last_page to still be found if POSTS_PER_PAGE changes.
+        return page_num
+        
+    def view_increment(self, thread_id):
+        utp = User_Thread_Position.query.filter_by(user_id=self.id,thread_id=thread_id).first()
+        if utp is None:
+            utp = User_Thread_Position(user_id=self.id, thread_id=thread_id,
+                                       last_post_viewed=1, user_views=1)
+            db.session.add(utp)
+        else:
+            if utp.user_views is None:
+                utp.user_views = 1
+            else:
+                utp.user_views += 1
+        db.session.commit()
+        
+    def update_last_post_viewed(self, thread_id, last_post_viewed):
+        utp = User_Thread_Position.query.filter_by(user_id=self.id, thread_id=thread_id).first()
+        if utp is None:
+            utp = User_Thread_Position(user_id=self.id, thread_id=thread_id,
+                                       last_post_viewed=1, user_views=1)
+        elif utp.last_post_viewed is None:
+            utp.last_post_viewed = 1
+        elif utp.last_post_viewed >= last_post_viewed:
+            return None
+        else:
+            utp.last_post_viewed = last_post_viewed
+        db.session.commit()
+
     def get_reset_password_token(self, expires_in=600):
         return jwt.encode(
             {'reset_password': self.id, 'exp': time() + expires_in},
@@ -77,7 +118,6 @@ class User(UserMixin, db.Model):
         except:
             return
         return User.query.get(id)
-
 
 @login.user_loader
 def load_user(id):
@@ -96,14 +136,14 @@ class Category(db.Model):
     def post_count(self):
         count = sum([t.posts.count() for t in self.threads])
         return count
-    
+        
     def last_post(self):
         #Post where Post.thread_id == (Thread where Thread.category_id == self.id).id
         last_post_in_category = Post.query.join(Thread,Thread.id==Post.thread_id).filter(
             Thread.category_id == self.id).order_by(
             Post.timestamp.desc()).first()
         return last_post_in_category
-    
+
 class Thread(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(140))
@@ -119,19 +159,26 @@ class Thread(db.Model):
     def post_count(self):
         count = self.posts.count()
         return count
-        
+    
     def last_post(self):
         last_post_in_thread = Post.query.filter_by(thread_id=self.id).order_by(Post.timestamp.desc()).first()
         return last_post_in_thread
+        
+    def last_page(self):
+        last_page = int((self.posts.count()-1)/current_app.config['POSTS_PER_PAGE']+1)
+        return last_page
         
 class User_Thread_Position(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     thread_id = db.Column(db.Integer, db.ForeignKey('thread.id'))
-    last_post_read = db.Column(db.Integer)
+    last_post_viewed = db.Column(db.Integer)
     user_views = db.Column(db.Integer)
     __table_args__ = (db.UniqueConstraint('user_id', 'thread_id', name='_user_thread_position'),
                      )
+    def __repr__(self):
+        return '<User_Thread_Position for {} in {}>'.format(self.user_id, self.thread_id)
+    
         
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)

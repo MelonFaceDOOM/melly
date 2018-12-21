@@ -53,6 +53,10 @@ h1 {
   background-color: var(--background-hover);
 }
 
+span {
+    white-space: pre-wrap;
+}
+
 
 
 /*HSL idea from:

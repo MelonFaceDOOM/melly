@@ -21,8 +21,8 @@
             {% for page in posts.iter_pages() %}
                 {% if page %}
                     {% if page != posts.page %}
-                        {% set page_url = url_for('main.thread', category_title=category.title, thread_title=title, page=page) %}
-                        <li class="page-item"><a class="page-link" href="{{ page_url }}">{{ page}} </a></li>
+                        {% set page_url = url_for('main.thread', thread_id=thread.id, page=page) %}
+                        <li class="page-item"><a class="page-link" href="{{ page_url }}">{{ page }} </a></li>
                     {% else %}
                         <li class="page-item"><strong>{{ page }}</strong></li>
                     {% endif %}
