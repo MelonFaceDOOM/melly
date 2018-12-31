@@ -3,7 +3,7 @@ from flask import render_template, flash, redirect, url_for, request, g, \
     jsonify, current_app
 from flask_login import current_user, login_required
 from app import db
-from app.main.forms import EditProfileForm, PostForm, CreateCategoryForm, CreateThreadForm
+from app.main.forms import EditProfileForm, PostForm, CreateCategoryForm, CreateThreadForm, SearchForm
 from app.models import User, Post, Thread, Category, User_Thread_Position
 from app.main import bp
 
@@ -13,6 +13,7 @@ def before_request():
     if current_user.is_authenticated:
         current_user.last_seen = datetime.utcnow()
         db.session.commit()
+        g.search_form = SearchForm()
 
 
 @bp.route('/', methods=['GET', 'POST'])
@@ -236,3 +237,18 @@ def quote_post(post_id):  # todo - change to a dedicated post page and just put 
         body = '[{}, {}: {}]'.format(post.author.username, post.timestamp, post.body)
         form.post.data = body
     return render_template('quote_post.html', title='Quote Post', form=form, thread=thread)
+
+@bp.route('/search')
+@login_required
+def search():
+    if not g.search_form.validate():
+        return redirect(url_for('main.index'))
+    page = request.args.get('page', 1, type=int)
+    posts, total = Post.search(g.search_form.q.data, page,
+                               current_app.config['POSTS_PER_PAGE'])
+    next_url = url_for('main.search', q=g.search_form.q.data, page=page + 1) \
+        if total > page * current_app.config['POSTS_PER_PAGE'] else None
+    prev_url = url_for('main.search', q=g.search_form.q.data, page=page - 1) \
+        if page > 1 else None
+    return render_template('search.html', title='Search', posts=posts,
+                           next_url=next_url, prev_url=prev_url)

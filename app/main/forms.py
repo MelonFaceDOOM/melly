@@ -47,3 +47,15 @@ class CreateThreadForm(FlaskForm):
         thread = Thread.query.join(Category).filter(Category.title == self.category_title, Thread.title==self.title.data).first()
         if thread is not None:
             raise ValidationError('Please use a different thread name.')
+            
+from flask import request
+
+class SearchForm(FlaskForm):
+    q = StringField('Search', validators=[DataRequired()])
+
+    def __init__(self, *args, **kwargs):
+        if 'formdata' not in kwargs:
+            kwargs['formdata'] = request.args
+        if 'csrf_enabled' not in kwargs:
+            kwargs['csrf_enabled'] = False
+        super(SearchForm, self).__init__(*args, **kwargs)
