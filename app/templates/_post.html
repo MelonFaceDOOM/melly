@@ -19,6 +19,11 @@
                 <a href="{{ url_for('main.quote_post', post_id=post.id) }}">
                     Quote
                 </a>
+                {% if post.author == current_user %}
+                <a href="{{ url_for('main.edit_post', post_id=post.id) }}">
+                    Edit
+                </a>
+                {% endif %}
             </td>
         </tr>
     </table>

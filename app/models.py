@@ -66,8 +66,6 @@ class User(UserMixin, db.Model):
         own = Post.query.filter_by(user_id=self.id)
         return followed.union(own).order_by(Post.timestamp.desc())
 
-    #todo - add views(thread_id)
-
     def last_page_viewed(self, thread_id):
         utp = User_Thread_Position.query.filter_by(user_id=self.id,thread_id=thread_id).first()
         if utp is None:

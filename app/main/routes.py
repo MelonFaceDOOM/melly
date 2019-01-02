@@ -232,12 +232,43 @@ def quote_post(post_id):  # todo - change to a dedicated post page and just put 
         db.session.commit()
         flash('Your post is now live!')
         return redirect(
-            url_for('main.thread', thread_id=thread.id, page=thread.last_page()))  # todo - redirect to last page
+            url_for('main.thread', thread_id=thread.id, page=thread.last_page()))
     elif request.method == 'GET':
         body = '[{}, {}: {}]'.format(post.author.username, post.timestamp, post.body)
         form.post.data = body
-    return render_template('quote_post.html', title='Quote Post', form=form, thread=thread)
+    return render_template('make_post.html', title='Quote Post', form=form, thread=thread)
 
+@bp.route('/edit_post/<post_id>', methods=['GET', 'POST'])
+@login_required
+def edit_post(post_id):
+    post = Post.query.filter_by(id=post_id).first()
+    if post is None:
+        flash('post {} not found.'.format(post_id))
+        return redirect(url_for('main.index'))
+        
+    if post.author.username is not current_user.username:
+        flash('You are not the author of post {}.'.format(post_id))
+        return redirect(url_for('main.thread', thread_id=post.thread.id,
+                                page=current_user.last_page_viewed(post.thread.id)))
+
+    # thread = Post.query.filter_by(
+        # id=post_id).first().thread  # todo - user should be able to quote a post into any thread, not just the same
+                                    # # thread as the original post
+    # if thread is None:
+        # flash('thread for post {} not found.'.format(post_id))
+        # return redirect(url_for('main.index'))
+
+    form = PostForm()
+    if form.validate_on_submit():
+        post.body = form.post.data
+        db.session.commit()
+        flash('Your post has been edited')
+        return redirect(
+            url_for('main.thread', thread_id=post.thread.id, page=post.thread.last_page())) # todo - jump to post instead of last page
+    elif request.method == 'GET':
+        form.post.data = post.body
+    return render_template('make_post.html', title='Edit Your Post', form=form, thread=post.thread)
+    
 @bp.route('/search')
 @login_required
 def search():
