@@ -3,6 +3,9 @@
                 <a href="{{ url_for('main.category', category_id=category.id) }}">
                     {{ category.title }}
                 </a>
+                <a href="{{ url_for('main.edit_category', category_id=category.id) }}">
+                    Edit
+                </a>
             </th>
             <th width=20px>
                 <a href="{{ url_for('main.user', username=category.author.username) }}">

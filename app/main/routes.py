@@ -120,10 +120,29 @@ def create_category():
         db.session.add(category)
         db.session.commit()
         flash('Your category, {} has been created! Make a first thread!'.format(form.title.data))
-        return redirect(url_for('main.category', category_id=category.id))  # update with url for new category?
-    return render_template('create_category.html', title='Create Category',
+        return redirect(url_for('main.category', category_id=category.id))
+    return render_template('create_category.html', title='Create a new category',
                            form=form)
+                           
+@bp.route('/edit_category/<category_id>', methods=['GET', 'POST'])
+@login_required
+def edit_category(category_id):
+    #intentionally allow anyone to edit category titles
+    category = Category.query.filter_by(id=category_id).first()
+    if category is None:
+        flash('category {} not found.'.format(category_id))
+        return redirect(url_for('main.index'))
 
+
+    form = CreateCategoryForm()
+    if form.validate_on_submit():
+        category.title = form.title.data
+        db.session.commit()
+        flash('The category has been edited')
+        return redirect(url_for('main.index'))
+    elif request.method == 'GET':
+        form.title.data = category.title
+    return render_template('create_category.html', title='Edit Category Title', form=form)
 
 @bp.route('/cat/<category_id>')
 @login_required
@@ -159,10 +178,32 @@ def create_thread(category_id):  # todo - update to include an initial post?
         db.session.commit()
         flash('Your thread {} has been created! Make a first post!'.format(form.title.data))
         return redirect(url_for('main.thread', thread_id=thread.id))
-    return render_template('create_thread.html', title='Create thread',
+    return render_template('create_thread.html', title='Create a new thread',
                            category_id=category_id, form=form)
 
-
+@bp.route('/edit_thread/<thread_id>', methods=['GET', 'POST'])
+@login_required
+def edit_thread(thread_id):
+    #todo - add ability to move category to the form
+    thread = Thread.query.filter_by(id=thread_id).first()
+    if thread is None:
+        flash('thread {} not found.'.format(thread_id))
+        return redirect(url_for('main.index'))
+    
+    if thread.author.username is not current_user.username:
+        flash('You are not the author of thread {}.'.format(thread_id))
+        return redirect(url_for('main.category', category_id=thread.category.id))
+    
+    form = CreateThreadForm(thread.category.title)
+    if form.validate_on_submit():
+        thread.title = form.title.data
+        db.session.commit()
+        flash('The thread has been edited')
+        return redirect(url_for('main.category', category_id=thread.category.id))
+    elif request.method == 'GET':
+        form.title.data = thread.title
+    return render_template('create_thread.html', title='Edit thread Title', form=form)
+                           
 @bp.route('/thread/<thread_id>', methods=['GET', 'POST'])
 @login_required
 def thread(thread_id):
@@ -250,13 +291,6 @@ def edit_post(post_id):
         flash('You are not the author of post {}.'.format(post_id))
         return redirect(url_for('main.thread', thread_id=post.thread.id,
                                 page=current_user.last_page_viewed(post.thread.id)))
-
-    # thread = Post.query.filter_by(
-        # id=post_id).first().thread  # todo - user should be able to quote a post into any thread, not just the same
-                                    # # thread as the original post
-    # if thread is None:
-        # flash('thread for post {} not found.'.format(post_id))
-        # return redirect(url_for('main.index'))
 
     form = PostForm()
     if form.validate_on_submit():
