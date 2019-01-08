@@ -17,7 +17,7 @@ class Config(object):
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     ELASTICSEARCH_URL = os.environ.get('ELASTICSEARCH_URL')
     ADMINS = ['lemmyelon@gmail.com']
-    POSTS_PER_PAGE = 5
+    POSTS_PER_PAGE = 25
     THREADS_PER_PAGE = 25
     CATEGORIES_PER_PAGE = 25
     

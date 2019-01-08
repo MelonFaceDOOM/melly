@@ -1,4 +1,4 @@
-    <table class="table table-hover" style="table-layout:fixed">
+    <table class="table table-hover" style="table-layout:fixed" id="{{ 'p' + post.id|string }}">
         <tr>
             <td width="80px">
                 <a href="{{ url_for('main.user', username=post.author.username) }}">

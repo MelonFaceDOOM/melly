@@ -31,7 +31,7 @@ class User(UserMixin, db.Model):
         primaryjoin=(followers.c.follower_id == id),
         secondaryjoin=(followers.c.followed_id == id),
         backref=db.backref('followers', lazy='dynamic'), lazy='dynamic')
-    threads_viewed = db.relationship('User_Thread_Position', backref='user', lazy='dynamic')
+    threads_viewed = db.relationship('User_Thread_Position', backref='user', lazy='dynamic') #todo - test this
 
     def __repr__(self):
         return '<User {}>'.format(self.username)
@@ -66,23 +66,13 @@ class User(UserMixin, db.Model):
         own = Post.query.filter_by(user_id=self.id)
         return followed.union(own).order_by(Post.timestamp.desc())
 
-    def last_page_viewed(self, thread_id):
-        utp = User_Thread_Position.query.filter_by(user_id=self.id,thread_id=thread_id).first()
-        if utp is None:
-            page_num = None
-        else:
-            last_post_viewed = utp.last_post_viewed
-            if last_post_viewed is None:
-                page_num = 1
-            else:
-                page_num = 1 + int((last_post_viewed-1) / current_app.config['POSTS_PER_PAGE']) # doing this allows for last_page to still be found if POSTS_PER_PAGE changes.
-        return page_num
-        
     def view_increment(self, thread_id):
         utp = User_Thread_Position.query.filter_by(user_id=self.id,thread_id=thread_id).first()
         if utp is None:
+            last_post_viewed_id = Thread.query.filter_by(id=thread_id).first().posts[0].id
             utp = User_Thread_Position(user_id=self.id, thread_id=thread_id,
-                                       last_post_viewed=1, user_views=1)
+                                       last_post_viewed_id=last_post_viewed_id,
+                                       user_views=1)
             db.session.add(utp)
         else:
             if utp.user_views is None:
@@ -90,18 +80,30 @@ class User(UserMixin, db.Model):
             else:
                 utp.user_views += 1
         db.session.commit()
-        
-    def update_last_post_viewed(self, thread_id, last_post_viewed):
+
+    def current_thread_position(self, thread_id):
+        # given a thread, returns the page number and post_id of the user's last viewed post in that thread.
+        utp = User_Thread_Position.query.filter_by(user_id=self.id,thread_id=thread_id).first()
+        if utp is None:
+            return None, None
+        else:
+            post_id = utp.last_post_viewed_id
+            thread = Thread.query.filter_by(id=thread_id).first()
+            pos = thread.posts.order_by(Post.id.asc()).filter(Post.id<=post_id).count()
+            page_num = 1 + int((pos-1) / current_app.config['POSTS_PER_PAGE'])
+            return page_num, post_id
+
+    def update_last_post_viewed(self, thread_id, last_post_viewed_id):
         utp = User_Thread_Position.query.filter_by(user_id=self.id, thread_id=thread_id).first()
         if utp is None:
+            last_post_viewed_id = Thread.query.filter_by(id=thread_id).first().posts[0].id
             utp = User_Thread_Position(user_id=self.id, thread_id=thread_id,
-                                       last_post_viewed=1, user_views=1)
-        elif utp.last_post_viewed is None:
-            utp.last_post_viewed = 1
-        elif utp.last_post_viewed >= last_post_viewed:
+                                       last_post_viewed_id=last_post_viewed_id,
+                                       user_views=1)
+        elif utp.last_post_viewed_id >= last_post_viewed_id:
             return None
         else:
-            utp.last_post_viewed = last_post_viewed
+            utp.last_post_viewed_id = last_post_viewed_id
         db.session.commit()
 
     def get_reset_password_token(self, expires_in=600):
@@ -138,7 +140,7 @@ class Category(db.Model):
         return count
         
     def last_post(self):
-        #Post where Post.thread_id == (Thread where Thread.category_id == self.id).id
+        # Post where Post.thread_id == (Thread where Thread.category_id == self.id).id
         last_post_in_category = Post.query.join(Thread,Thread.id==Post.thread_id).filter(
             Thread.category_id == self.id).order_by(
             Post.timestamp.desc()).first()
@@ -151,7 +153,7 @@ class Thread(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'))
     posts = db.relationship('Post', backref='thread', lazy='dynamic')
-    users_visited = db.relationship('User_Thread_Position', backref='thread', lazy='dynamic')
+    users_visited = db.relationship('User_Thread_Position', backref='thread', lazy='dynamic') #todo - test this
 
     def __repr__(self):
         return '<Thread {}>'.format(self.title)
@@ -172,7 +174,7 @@ class User_Thread_Position(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     thread_id = db.Column(db.Integer, db.ForeignKey('thread.id'))
-    last_post_viewed = db.Column(db.Integer)
+    last_post_viewed_id = db.Column(db.Integer, db.ForeignKey('post.id'))
     user_views = db.Column(db.Integer)
     __table_args__ = (db.UniqueConstraint('user_id', 'thread_id', name='_user_thread_position'),
                      )
@@ -228,6 +230,8 @@ class Post(SearchableMixin, db.Model):
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     thread_id = db.Column(db.Integer, db.ForeignKey('thread.id'))
-
+    users_viewed = db.relationship('User_Thread_Position', backref='last_post_viewed', lazy='dynamic') #todo - test this
     def __repr__(self):
         return '<Post {}>'.format(self.body)
+
+    #todo - add a function to return the page/id of a post so that its position can be easily anchored

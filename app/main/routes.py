@@ -181,10 +181,11 @@ def create_thread(category_id):  # todo - update to include an initial post?
     return render_template('create_thread.html', title='Create a new thread',
                            category_id=category_id, form=form)
 
+
 @bp.route('/edit_thread/<thread_id>', methods=['GET', 'POST'])
 @login_required
 def edit_thread(thread_id):
-    #todo - add ability to move category to the form
+    # todo - add ability to move category to the form
     thread = Thread.query.filter_by(id=thread_id).first()
     if thread is None:
         flash('thread {} not found.'.format(thread_id))
@@ -203,24 +204,37 @@ def edit_thread(thread_id):
     elif request.method == 'GET':
         form.title.data = thread.title
     return render_template('create_thread.html', title='Edit thread Title', form=form)
-                           
+
+
 @bp.route('/thread/<thread_id>', methods=['GET', 'POST'])
 @login_required
 def thread(thread_id):
+    form = PostForm()
+    if form.validate_on_submit():
+        post = Post(body=form.post.data, author=current_user, thread=thread)
+        db.session.add(post)
+        db.session.commit()
+        flash('Your post is now live!')
+
+        return redirect(
+            url_for('main.thread', thread_id=thread_id, page=thread.last_page()))  # todo add new-post anchor
+
     # If thread is not found, return to index
     thread = Thread.query.filter_by(id=thread_id).first()
     if thread is None:
         flash('thread "{}" not found'.format(thread_id))
         return redirect(url_for('main.index'))
 
-    category = thread.category
+    category = thread.category # todo should we account for the potential of a thread that is not in a category?
 
+    last_page_viewed, last_post_id = current_user.current_thread_position(thread_id=thread_id)
 
-    last_page_viewed = current_user.last_page_viewed(thread_id=thread_id)
     if last_page_viewed:
         page = request.args.get('page', last_page_viewed, type=int)
     else:
         page = request.args.get('page', 1, type=int)
+
+    anchor = 'p' + str(last_post_id)
 
     posts = thread.posts.order_by(Post.timestamp.asc()).paginate(
         page, current_app.config['POSTS_PER_PAGE'], False)
@@ -232,24 +246,13 @@ def thread(thread_id):
                        page=posts.prev_num) \
         if posts.has_prev else None
 
-    form = PostForm()
-    if form.validate_on_submit():
-        post = Post(body=form.post.data, author=current_user, thread=thread)
-        db.session.add(post)
-        db.session.commit()
-        flash('Your post is now live!')
-
-        return redirect(url_for('main.thread', thread_id=thread_id, page=thread.last_page()))
-
-    last_post_viewed = page * current_app.config['POSTS_PER_PAGE']
-
     current_user.view_increment(thread_id=thread_id)
-    current_user.update_last_post_viewed(thread_id=thread_id,last_post_viewed=last_post_viewed)
+    last_post_viewed_id = posts.items[-1].id
+    current_user.update_last_post_viewed(thread_id=thread_id,last_post_viewed_id=last_post_viewed_id)
 
     return render_template('thread.html', title=thread.title, form=form,
                            posts=posts, next_url=next_url, thread=thread,
-                           prev_url=prev_url)
-
+                           prev_url=prev_url, _anchor=anchor)
 
 @bp.route('/quote/<post_id>', methods=['GET', 'POST'])
 @login_required
