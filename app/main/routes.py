@@ -123,16 +123,16 @@ def create_category():
         return redirect(url_for('main.category', category_id=category.id))
     return render_template('create_category.html', title='Create a new category',
                            form=form)
-                           
+
+
 @bp.route('/edit_category/<category_id>', methods=['GET', 'POST'])
 @login_required
 def edit_category(category_id):
-    #intentionally allow anyone to edit category titles
+    # intentionally allow anyone to edit category titles
     category = Category.query.filter_by(id=category_id).first()
     if category is None:
         flash('category {} not found.'.format(category_id))
         return redirect(url_for('main.index'))
-
 
     form = CreateCategoryForm()
     if form.validate_on_submit():
@@ -143,6 +143,7 @@ def edit_category(category_id):
     elif request.method == 'GET':
         form.title.data = category.title
     return render_template('create_category.html', title='Edit Category Title', form=form)
+
 
 @bp.route('/cat/<category_id>')
 @login_required
@@ -209,6 +210,12 @@ def edit_thread(thread_id):
 @bp.route('/thread/<thread_id>', methods=['GET', 'POST'])
 @login_required
 def thread(thread_id):
+    thread = Thread.query.filter_by(id=thread_id).first()
+    # If thread is not found, return to index
+    if thread is None:
+        flash('thread "{}" not found'.format(thread_id))
+        return redirect(url_for('main.index'))
+
     form = PostForm()
     if form.validate_on_submit():
         post = Post(body=form.post.data, author=current_user, thread=thread)
@@ -219,23 +226,18 @@ def thread(thread_id):
         return redirect(
             url_for('main.thread', thread_id=thread_id, page=thread.last_page()))  # todo add new-post anchor
 
-    # If thread is not found, return to index
-    thread = Thread.query.filter_by(id=thread_id).first()
-    if thread is None:
-        flash('thread "{}" not found'.format(thread_id))
-        return redirect(url_for('main.index'))
-
-    category = thread.category # todo should we account for the potential of a thread that is not in a category?
-
-    last_page_viewed, last_post_id = current_user.current_thread_position(thread_id=thread_id)
-
-    if last_page_viewed:
-        page = request.args.get('page', last_page_viewed, type=int)
+    # if page is not specified, find the user's last post and redirect to it.
+    page = request.args.get('page', None, type=int)
+    if page:
+        pass
     else:
-        page = request.args.get('page', 1, type=int)
+        last_page_viewed, last_post_id = current_user.current_thread_position(thread_id=thread_id)
+        page = last_page_viewed if last_page_viewed else 1
+        anchor = 'p' + str(last_post_id) if last_post_id else None
+        return redirect(
+            url_for('main.thread', thread_id=thread_id, page=page, _anchor=anchor))
 
-    anchor = 'p' + str(last_post_id)
-
+    page = request.args.get('page', 1, type=int)
     posts = thread.posts.order_by(Post.timestamp.asc()).paginate(
         page, current_app.config['POSTS_PER_PAGE'], False)
 
@@ -247,12 +249,12 @@ def thread(thread_id):
         if posts.has_prev else None
 
     current_user.view_increment(thread_id=thread_id)
-    last_post_viewed_id = posts.items[-1].id
+    last_post_viewed_id = posts.items[-1].id if posts.items else None
     current_user.update_last_post_viewed(thread_id=thread_id,last_post_viewed_id=last_post_viewed_id)
 
     return render_template('thread.html', title=thread.title, form=form,
                            posts=posts, next_url=next_url, thread=thread,
-                           prev_url=prev_url, _anchor=anchor)
+                           prev_url=prev_url)
 
 @bp.route('/quote/<post_id>', methods=['GET', 'POST'])
 @login_required

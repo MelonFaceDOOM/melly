@@ -69,42 +69,54 @@ class User(UserMixin, db.Model):
     def view_increment(self, thread_id):
         utp = User_Thread_Position.query.filter_by(user_id=self.id,thread_id=thread_id).first()
         if utp is None:
-            last_post_viewed_id = Thread.query.filter_by(id=thread_id).first().posts[0].id
-            utp = User_Thread_Position(user_id=self.id, thread_id=thread_id,
-                                       last_post_viewed_id=last_post_viewed_id,
-                                       user_views=1)
+            utp = User_Thread_Position(user_id=self.id, thread_id=thread_id, user_views=1)
             db.session.add(utp)
         else:
-            if utp.user_views is None:
-                utp.user_views = 1
-            else:
-                utp.user_views += 1
+            utp.user_views += 1
         db.session.commit()
 
     def current_thread_position(self, thread_id):
         # given a thread, returns the page number and post_id of the user's last viewed post in that thread.
-        utp = User_Thread_Position.query.filter_by(user_id=self.id,thread_id=thread_id).first()
+        utp = User_Thread_Position.query.filter_by(user_id=self.id, thread_id=thread_id).first()
         if utp is None:
             return None, None
         else:
             post_id = utp.last_post_viewed_id
+            if post_id is None:
+                return None, None
+
             thread = Thread.query.filter_by(id=thread_id).first()
             pos = thread.posts.order_by(Post.id.asc()).filter(Post.id<=post_id).count()
             page_num = 1 + int((pos-1) / current_app.config['POSTS_PER_PAGE'])
             return page_num, post_id
 
     def update_last_post_viewed(self, thread_id, last_post_viewed_id):
+        # todo - clean up/simplify
         utp = User_Thread_Position.query.filter_by(user_id=self.id, thread_id=thread_id).first()
         if utp is None:
-            last_post_viewed_id = Thread.query.filter_by(id=thread_id).first().posts[0].id
+            try:
+                first_post_id = Thread.query.filter_by(id=thread_id).first().posts[0].id
+            except IndexError:
+                first_post_id = None
+
             utp = User_Thread_Position(user_id=self.id, thread_id=thread_id,
-                                       last_post_viewed_id=last_post_viewed_id,
+                                       last_post_viewed_id=first_post_id,
                                        user_views=1)
-        elif utp.last_post_viewed_id >= last_post_viewed_id:
+            db.sessions.add(utp)
+            db.session.commit()
+            return None
+        elif utp.last_post_viewed_id is None:
+            if last_post_viewed_id:
+                utp.last_post_viewed_id = last_post_viewed_id
+        elif last_post_viewed_id and utp.last_post_viewed_id >= last_post_viewed_id:
+            return None
+        elif last_post_viewed_id and utp.last_post_viewed_id < last_post_viewed_id:
+            utp.last_post_viewed_id = last_post_viewed_id
+            db.session.commit()
             return None
         else:
-            utp.last_post_viewed_id = last_post_viewed_id
-        db.session.commit()
+            return None
+
 
     def get_reset_password_token(self, expires_in=600):
         return jwt.encode(
