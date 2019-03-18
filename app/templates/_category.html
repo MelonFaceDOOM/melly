@@ -1,49 +1,24 @@
-        <tr>
-            <th>
-                <a href="{{ url_for('main.category', category_id=category.id) }}">
-                    {{ category.title }}
-                </a>
-                <a href="{{ url_for('main.edit_category', category_id=category.id) }}">
-                    Edit
-                </a>
-            </th>
-            <th width=20px>
-                <a href="{{ url_for('main.user', username=category.author.username) }}">
-                    <img src="{{ category.author.avatar(18) }}" />
-                </a>
-            </th>
-            <th style="word-wrap: break-word">
-                <a href="{{ url_for('main.user', username=category.author.username) }}">
-                    {{ category.author.username }}
-                </a>
-            </th>
-            <th>
-                {{ category.threads.count() }}
-            </th>
-            <th>
-                {{ category.post_count() }}
-            </th>
-            <th>
-                {% set last_post = category.last_post() %}
-                {% if last_post %}
-                    {% set thread_link %}
-                        <a href="{{ url_for('main.thread', thread_id=last_post.thread.id) }}">
-                            {{ last_post.thread.title }}
-                        </a>
-                    {% endset %}
-                    
-                    {% set user_link %}
-                        <a href="{{ url_for('main.user', username=last_post.author.username) }}">
-                            {{ last_post.author.username }}
-                        </a>
-                    {% endset %}
+    <h2 class="category-title">
+        <a href="{{ url_for('main.category', category_id=category.id) }}">
+            {{ category.title }}
+        </a>
+    </h2>
+    <table class="table table-hover" style="table-layout:fixed">
+        <colgroup>
+            <col span="1" style="width: 52%;">
+            <col span="1" style="width: 3%;">
+            <col span="1" style="width: 15%;">
+            <col span="1" style="width: 10%;">
+            <col span="1" style="width: 20%;">
 
-                    {{ thread_link }}
-                     by {{ user_link }}
-                    {{ moment(last_post.timestamp).format('MMMM Do YYYY, h:mm:ss a') }}
-                {% else %}
-                    N/A
-                {% endif %} 
-                
-            </th>
+        <tr class="table-header">
+            <th>Thread</th>
+            <th></th>
+            <th>Author</th>
+            <th>Post Count</th>
+            <th>Last Post</th>
         </tr>
+        {% for thread in category.active_threads(5) %}
+        {% include '_thread.html' %}
+        {% endfor %}
+    </table>

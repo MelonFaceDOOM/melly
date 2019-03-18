@@ -1,10 +1,9 @@
 from datetime import datetime
-from flask import render_template, flash, redirect, url_for, request, g, \
-    jsonify, current_app
+from flask import render_template, flash, redirect, url_for, request, g, current_app
 from flask_login import current_user, login_required
 from app import db
-from app.main.forms import EditProfileForm, PostForm, CreateCategoryForm, CreateThreadForm, SearchForm
-from app.models import User, Post, Thread, Category, User_Thread_Position
+from app.main.forms import EditProfileForm, PostForm, CreateCategoryForm, CreateThreadForm, SearchForm, MessageForm
+from app.models import User, Post, Thread, Category, Message, PostReaction
 from app.main import bp
 
 
@@ -21,29 +20,15 @@ def before_request():
 @login_required
 def index():
     page = request.args.get('page', 1, type=int)
-    categories = Category.query.order_by(Category.timestamp.desc()).paginate(
+    categories = Category.query.order_by(Category.timestamp.asc()).paginate(
         page, current_app.config['CATEGORIES_PER_PAGE'], False)
+
     next_url = url_for('main.index', page=categories.next_num) \
         if categories.has_next else None
     prev_url = url_for('main.index', page=categories.prev_num) \
         if categories.has_prev else None
     return render_template('index.html', title='Home',
                            categories=categories.items, next_url=next_url,
-                           prev_url=prev_url)
-
-
-@bp.route('/explore')
-@login_required
-def explore():
-    page = request.args.get('page', 1, type=int)
-    posts = Post.query.order_by(Post.timestamp.desc()).paginate(
-        page, current_app.config['POSTS_PER_PAGE'], False)
-    next_url = url_for('main.explore', page=posts.next_num) \
-        if posts.has_next else None
-    prev_url = url_for('main.explore', page=posts.prev_num) \
-        if posts.has_prev else None
-    return render_template('explore.html', title='Explore',
-                           posts=posts.items, next_url=next_url,
                            prev_url=prev_url)
 
 
@@ -77,38 +62,6 @@ def edit_profile():
         form.about_me.data = current_user.about_me
     return render_template('edit_profile.html', title='Edit Profile',
                            form=form)
-
-
-@bp.route('/follow/<username>')
-@login_required
-def follow(username):
-    user = User.query.filter_by(username=username).first()
-    if user is None:
-        flash('User {} not found'.format(username))
-        return redirect(url_for('main.index'))
-    if user == current_user:
-        flash('You cannot follow yourself!')
-        return redirect(url_for('main.user', username=username))
-    current_user.follow(user)
-    db.session.commit()
-    flash('You are following {}!'.format(username))
-    return redirect(url_for('main.user', username=username))
-
-
-@bp.route('/unfollow/<username>')
-@login_required
-def unfollow(username):
-    user = User.query.filter_by(username=username).first()
-    if user is None:
-        flash('User {} not found.'.format(username))
-        return redirect(url_for('main.index'))
-    if user == current_user:
-        flash('You cannot unfollow yourself!')
-        return redirect(url_for('main.user', username=username))
-    current_user.unfollow(user)
-    db.session.commit()
-    flash('You are not following {}.'.format(username))
-    return redirect(url_for('main.user', username=username))
 
 
 @bp.route('/create_category', methods=['GET', 'POST'])
@@ -207,6 +160,19 @@ def edit_thread(thread_id):
     return render_template('create_thread.html', title='Edit thread Title', form=form)
 
 
+@bp.route('/react', methods=['POST'])
+@login_required
+def react():
+    reaction_type = request.args.get('reaction_type')
+    post_id = request.args.get('post_id')
+    reaction = PostReaction.query.filter_by(user=current_user, post_id=post_id, reaction_type=reaction_type).first()
+    if reaction is None:
+        reaction = PostReaction(user=current_user, post_id=post_id, reaction_type=reaction_type)
+        db.session.add(reaction)
+        db.session.commit()
+        # todo - refresh page
+    return '', 204
+
 @bp.route('/thread/<thread_id>', methods=['GET', 'POST'])
 @login_required
 def thread(thread_id):
@@ -226,12 +192,16 @@ def thread(thread_id):
         return redirect(
             url_for('main.thread', thread_id=thread_id, page=thread.last_page()))  # todo add new-post anchor
 
+
     # if page is not specified, find the user's last post and redirect to it.
     page = request.args.get('page', None, type=int)
-    if page:
-        pass
-    else:
-        last_page_viewed, last_post_id = current_user.current_thread_position(thread_id=thread_id)
+
+    '''This is a weird work-around to anchor to a specific post-id
+    Basically, if no page is provided, it will find a page & anchor
+    value, and re-route to itself. Since page will have a value this
+    time, it will skip over this section of the code'''
+    if not page:
+        last_page_viewed, last_post_id = current_user.get_user_thread_position(thread=thread)
         page = last_page_viewed if last_page_viewed else 1
         anchor = 'p' + str(last_post_id) if last_post_id else None
         return redirect(
@@ -248,14 +218,21 @@ def thread(thread_id):
                        page=posts.prev_num) \
         if posts.has_prev else None
 
-    current_user.view_increment(thread_id=thread_id)
-    last_post_viewed_id = posts.items[-1].id if posts.items else None
-    current_user.update_last_post_viewed(thread_id=thread_id,last_post_viewed_id=last_post_viewed_id)
+    #add 1 view to the user's view count for this thread
+    current_user.view_thread(thread=thread)
+
+    # if the thread is not empty, update the user's last_viewed_timestamp
+    if posts.items:
+        last_viewed_timestamp = posts.items[-1].timestamp
+        current_user.set_last_viewed_timestamp(
+            thread=thread,
+            last_viewed_timestamp=last_viewed_timestamp)
 
     return render_template('thread.html', title=thread.title, form=form,
                            posts=posts, next_url=next_url, thread=thread,
                            prev_url=prev_url)
 
+                           
 @bp.route('/quote/<post_id>', methods=['GET', 'POST'])
 @login_required
 def quote_post(post_id):  # todo - change to a dedicated post page and just put the quote text in.
@@ -284,6 +261,7 @@ def quote_post(post_id):  # todo - change to a dedicated post page and just put 
         form.post.data = body
     return render_template('make_post.html', title='Quote Post', form=form, thread=thread)
 
+
 @bp.route('/edit_post/<post_id>', methods=['GET', 'POST'])
 @login_required
 def edit_post(post_id):
@@ -307,7 +285,19 @@ def edit_post(post_id):
     elif request.method == 'GET':
         form.post.data = post.body
     return render_template('make_post.html', title='Edit Your Post', form=form, thread=post.thread)
-    
+
+
+@bp.route('/post/<post_id>')
+@login_required
+def post(post_id):
+    post = Post.query.filter_by(id=post_id).first()
+    if post is None:
+        flash('post {} not found.'.format(post_id))
+        return redirect(url_for('main.index'))
+
+    return render_template('post.html', title='View single post', thread=post.thread, post=post)
+
+
 @bp.route('/search')
 @login_required
 def search():
@@ -321,4 +311,37 @@ def search():
     prev_url = url_for('main.search', q=g.search_form.q.data, page=page - 1) \
         if page > 1 else None
     return render_template('search.html', title='Search', posts=posts,
+                           next_url=next_url, prev_url=prev_url)
+
+
+@bp.route('/send_message/<recipient>', methods=['GET', 'POST'])
+@login_required
+def send_message(recipient):
+    user = User.query.filter_by(username=recipient).first_or_404()
+    form = MessageForm()
+    if form.validate_on_submit():
+        msg = Message(author=current_user, recipient=user,
+                      body=form.message.data)
+        db.session.add(msg)
+        db.session.commit()
+        flash('Your message has been sent.')
+        return redirect(url_for('main.user', username=recipient))
+    return render_template('send_message.html', title='Send Message',
+                           form=form, recipient=recipient)
+
+
+@bp.route('/messages')
+@login_required
+def messages():
+    current_user.last_message_read_time = datetime.utcnow()
+    db.session.commit()
+    page = request.args.get('page', 1, type=int)
+    messages = current_user.messages_received.order_by(
+        Message.timestamp.desc()).paginate(
+            page, current_app.config['POSTS_PER_PAGE'], False)
+    next_url = url_for('main.messages', page=messages.next_num) \
+        if messages.has_next else None
+    prev_url = url_for('main.messages', page=messages.prev_num) \
+        if messages.has_prev else None
+    return render_template('messages.html', messages=messages,
                            next_url=next_url, prev_url=prev_url)
