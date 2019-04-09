@@ -9,7 +9,8 @@ import jwt
 import json
 from app import db, login
 from app.search import add_to_index, remove_from_index, query_index
-
+import os
+import contextlib
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -61,7 +62,7 @@ class User(UserMixin, db.Model):
 
     def is_thread_viewed(self, thread):
         return UserThreadMetadata.query.filter_by(user=self, thread=thread).count() > 0
-   
+
     def view_thread(self, thread):
         # First time viewing thread
         if not self.is_thread_viewed(thread):
@@ -84,7 +85,7 @@ class User(UserMixin, db.Model):
         else:
             # check if the provided timestamp is more recent than the existing one
             utm = UserThreadMetadata.query.filter_by(user=self, thread=thread).first()
-            
+
             # this is needed incase a UserThreadMetadata entry has been made,
             # but there is no registered last_viewed_timestamp
             if not utm.last_viewed_timestamp:
@@ -94,19 +95,19 @@ class User(UserMixin, db.Model):
             elif utm.last_viewed_timestamp < last_viewed_timestamp:
                 utm.last_viewed_timestamp = last_viewed_timestamp
                 db.session.commit()
-                
+
     def get_user_thread_position(self, thread):
         """return page and post_id based on user's last_viewed_timestamp"""
-        
+
         if not self.is_thread_viewed(thread):
             return None, None
         utm = UserThreadMetadata.query.filter_by(user=self, thread=thread).first()
         if not utm.last_viewed_timestamp:
             return None, None
-        posts = thread.posts.order_by(Post.timestamp.asc()).filter(Post.timestamp<=utm.last_viewed_timestamp).all()
-        pos = len(posts) # the number of posts in thread that are older than the user's last-read post timestamp
-        page_num = 1 + int((pos-1) / current_app.config['POSTS_PER_PAGE']) # pagenumber
-        post_id = posts[-1].id # id of the post closest to the user's last-read post timestamp
+        posts = thread.posts.order_by(Post.timestamp.asc()).filter(Post.timestamp <= utm.last_viewed_timestamp).all()
+        pos = len(posts)  # the number of posts in thread that are older than the user's last-read post timestamp
+        page_num = 1 + int((pos - 1) / current_app.config['POSTS_PER_PAGE'])  # pagenumber
+        post_id = posts[-1].id  # id of the post closest to the user's last-read post timestamp
         return page_num, post_id
 
     def get_reset_password_token(self, expires_in=600):
@@ -141,20 +142,20 @@ class Thread(db.Model):
 
     def __repr__(self):
         return '<Thread {}>'.format(self.title)
-    
+
     def post_count(self):
         count = self.posts.count()
         return count
-    
+
     def last_post(self):
         last_post_in_thread = Post.query.filter_by(thread_id=self.id).order_by(Post.timestamp.desc()).first()
         return last_post_in_thread
-        
+
     def last_page(self):
-        last_page = int((self.posts.count()-1)/current_app.config['POSTS_PER_PAGE']+1)
+        last_page = int((self.posts.count() - 1) / current_app.config['POSTS_PER_PAGE'] + 1)
         return last_page
 
-        
+
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(140), index=True, unique=True)
@@ -164,14 +165,14 @@ class Category(db.Model):
 
     def __repr__(self):
         return '<Category {}>'.format(self.title)
-        
+
     def post_count(self):
         count = sum([t.posts.count() for t in self.threads])
         return count
-        
+
     def last_post(self):
         # Post where Post.thread_id == (Thread where Thread.category_id == self.id).id
-        last_post_in_category = Post.query.join(Thread, Thread.id==Post.thread_id).filter(
+        last_post_in_category = Post.query.join(Thread, Thread.id == Post.thread_id).filter(
             Thread.category_id == self.id).order_by(
             Post.timestamp.desc()).first()
         return last_post_in_category
@@ -244,32 +245,52 @@ class Post(SearchableMixin, db.Model):
 
     def page(self):
         post_position = len(Post.query.filter_by(thread_id=self.thread_id).filter(Post.id <= self.id).all())
-        page = int((post_position-1)/current_app.config['POSTS_PER_PAGE']+1)
+        page = int((post_position - 1) / current_app.config['POSTS_PER_PAGE'] + 1)
         return page
-    
-    
+
+
 class UserThreadMetadata(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     thread_id = db.Column(db.Integer, db.ForeignKey('thread.id'))
-    last_viewed_timestamp = db.Column(db.DateTime, index=True) # the timestamp of the last post they have read
+    last_viewed_timestamp = db.Column(db.DateTime, index=True)  # the timestamp of the last post they have read
     user_thread_views = db.Column(db.Integer, default=1)
     __table_args__ = (db.UniqueConstraint('user_id', 'thread_id', name='_user_thread_metadata'),
                       )
 
     def __repr__(self):
-        return '<UserThreadMetadata for {} in {}>'.format(self.user_id, self.thread_id)
+        return '<UserThreadMetadata for user {} in thread {}>'.format(self.user_id, self.thread_id)
 
 
 class PostReaction(db.Model):
+    # stores user reactions to posts
     id = db.Column(db.Integer, primary_key=True)
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    reaction_type = db.Column(db.String(140))
-    __table_args__ = (db.UniqueConstraint('user_id', 'post_id', 'reaction_type'),
+    emoji_id = db.Column(db.Integer, db.ForeignKey('emoji.id'))
+    __table_args__ = (db.UniqueConstraint('user_id', 'post_id', 'emoji_id'),
                       )
-        
-        
+
+    def __repr__(self):
+        return '<PostReaction {}>'.format(self.id)
+
+
+class Emoji(db.Model):
+    # stores reaction images
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(140))
+    icon_path = db.Column(db.String(140))
+    posts = db.relationship('PostReaction', backref='emoji', lazy='dynamic')
+
+    def __repr__(self):
+        return '<Emoji {}>'.format(self.name)
+
+    def delete(self):
+        with contextlib.suppress(FileNotFoundError):
+            os.remove(self.icon_path)
+        db.session.delete(self)
+        db.session.commit()
+
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     sender_id = db.Column(db.Integer, db.ForeignKey('user.id'))

@@ -20,6 +20,7 @@ class Config(object):
     POSTS_PER_PAGE = 25
     THREADS_PER_PAGE = 25
     CATEGORIES_PER_PAGE = 25
+    UPLOAD_FOLDER = os.path.join(basedir, "app/static/images")
     
     
     MAIL_SERVER = "smtp.googlemail.com"

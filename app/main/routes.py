@@ -1,11 +1,13 @@
 from datetime import datetime
-from flask import render_template, flash, redirect, url_for, request, g, current_app
+from flask import render_template, flash, redirect, url_for, request, g, current_app, jsonify
 from flask_login import current_user, login_required
 from app import db
-from app.main.forms import EditProfileForm, PostForm, CreateCategoryForm, CreateThreadForm, SearchForm, MessageForm
-from app.models import User, Post, Thread, Category, Message, PostReaction
+from app.main.forms import (EditProfileForm, PostForm, CreateCategoryForm, CreateThreadForm, SearchForm, MessageForm,
+    UploadEmojiForm)
+from app.models import User, Post, Thread, Category, Message, PostReaction, Emoji
 from app.main import bp
-
+import os
+from werkzeug.utils import secure_filename
 
 @bp.before_app_request
 def before_request():
@@ -159,19 +161,6 @@ def edit_thread(thread_id):
         form.title.data = thread.title
     return render_template('create_thread.html', title='Edit thread Title', form=form)
 
-
-@bp.route('/react', methods=['POST'])
-@login_required
-def react():
-    reaction_type = request.args.get('reaction_type')
-    post_id = request.args.get('post_id')
-    reaction = PostReaction.query.filter_by(user=current_user, post_id=post_id, reaction_type=reaction_type).first()
-    if reaction is None:
-        reaction = PostReaction(user=current_user, post_id=post_id, reaction_type=reaction_type)
-        db.session.add(reaction)
-        db.session.commit()
-        # todo - refresh page
-    return '', 204
 
 @bp.route('/thread/<thread_id>', methods=['GET', 'POST'])
 @login_required
@@ -345,3 +334,68 @@ def messages():
         if messages.has_prev else None
     return render_template('messages.html', messages=messages,
                            next_url=next_url, prev_url=prev_url)
+
+def allowed_file(filename):
+    allowed_extensions = set(['png', 'jpg', 'jpeg', 'gif'])
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in allowed_extensions
+
+@bp.route('/upload_emoji', methods=['GET', 'POST'])
+@login_required
+def upload_emoji():
+    form = UploadEmojiForm()
+    if form.validate_on_submit():
+        emoji_name = form.emoji_name.data
+        file = form.file.data
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+
+        emoji = Emoji(name=emoji_name, icon_path=filepath)
+        db.session.add(emoji)
+        db.session.commit()
+        return redirect(url_for('main.upload_emoji'))
+    return render_template('upload_emoji.html', form=form)
+
+@bp.route('/reactions')
+@login_required
+def reactions():
+    post = Post.filter_by(id=request.args.get('post_id')).first()
+    emoji = Emoji.query.filter_by(name=request.args.get('reaction_type')).first()
+
+    if post and emoji:
+        reaction = PostReaction(post=post, emoji=emoji)
+        db.session.add(reaction)
+        db.session.commit()
+
+    reactions = []
+    if post:
+        reactions = post.reactions # todo - test if there are no reactions
+    return render_template('reactions.html', reactions=reactions)
+
+# @bp.route('/react', methods=['POST'])
+# @login_required
+# def react():
+#     post = Post.filter_by(id=request.form['post_id']).first()
+#     emoji = Emoji.query.filter_by(name=request.form['reaction_type']).first()
+#
+#     reaction = PostReaction(post=post,emoji=emoji)  # todo - add check in case reaction is not found
+#     db.session.add(reaction)
+#     db.session.commit()
+#
+#     reactions = post.reactions
+#     return jsonify({'result': 'success', 'reactions': reactions})
+
+
+# @bp.route('/react', methods=['POST'])
+# @login_required
+# def react():
+#     reaction_type = request.args.get('reaction_type')
+#     post_id = request.args.get('post_id')
+#     reaction = PostReaction.query.filter_by(user=current_user, post_id=post_id, reaction_type=reaction_type).first()
+#     if reaction is None:
+#         reaction = PostReaction(user=current_user, post_id=post_id, reaction_type=reaction_type)
+#         db.session.add(reaction)
+#         db.session.commit()
+#         # todo - refresh page
+#     return '', 204
