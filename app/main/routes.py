@@ -3,11 +3,12 @@ from flask import render_template, flash, redirect, url_for, request, g, current
 from flask_login import current_user, login_required
 from app import db
 from app.main.forms import (EditProfileForm, PostForm, CreateCategoryForm, CreateThreadForm, SearchForm, MessageForm,
-    UploadEmojiForm)
+                            UploadEmojiForm)
 from app.models import User, Post, Thread, Category, Message, PostReaction, Emoji
 from app.main import bp
 import os
 from werkzeug.utils import secure_filename
+
 
 @bp.before_app_request
 def before_request():
@@ -146,11 +147,11 @@ def edit_thread(thread_id):
     if thread is None:
         flash('thread {} not found.'.format(thread_id))
         return redirect(url_for('main.index'))
-    
+
     if thread.author.username is not current_user.username:
         flash('You are not the author of thread {}.'.format(thread_id))
         return redirect(url_for('main.category', category_id=thread.category.id))
-    
+
     form = CreateThreadForm(thread.category.title)
     if form.validate_on_submit():
         thread.title = form.title.data
@@ -181,7 +182,6 @@ def thread(thread_id):
         return redirect(
             url_for('main.thread', thread_id=thread_id, page=thread.last_page()))  # todo add new-post anchor
 
-
     # if page is not specified, find the user's last post and redirect to it.
     page = request.args.get('page', None, type=int)
 
@@ -207,7 +207,7 @@ def thread(thread_id):
                        page=posts.prev_num) \
         if posts.has_prev else None
 
-    #add 1 view to the user's view count for this thread
+    # add 1 view to the user's view count for this thread
     current_user.view_thread(thread=thread)
 
     # if the thread is not empty, update the user's last_viewed_timestamp
@@ -221,7 +221,7 @@ def thread(thread_id):
                            posts=posts, next_url=next_url, thread=thread,
                            prev_url=prev_url)
 
-                           
+
 @bp.route('/quote/<post_id>', methods=['GET', 'POST'])
 @login_required
 def quote_post(post_id):  # todo - change to a dedicated post page and just put the quote text in.
@@ -232,7 +232,7 @@ def quote_post(post_id):  # todo - change to a dedicated post page and just put 
 
     thread = Post.query.filter_by(
         id=post_id).first().thread  # todo - user should be able to quote a post into any thread, not just the same
-                                    # thread as the original post
+    # thread as the original post
     if thread is None:
         flash('thread for post {} not found.'.format(post_id))
         return redirect(url_for('main.index'))
@@ -258,7 +258,7 @@ def edit_post(post_id):
     if post is None:
         flash('post {} not found.'.format(post_id))
         return redirect(url_for('main.index'))
-        
+
     if post.author.username is not current_user.username:
         flash('You are not the author of post {}.'.format(post_id))
         return redirect(url_for('main.thread', thread_id=post.thread.id,
@@ -270,7 +270,8 @@ def edit_post(post_id):
         db.session.commit()
         flash('Your post has been edited')
         return redirect(
-            url_for('main.thread', thread_id=post.thread.id, page=post.thread.last_page())) # todo - jump to post instead of last page
+            url_for('main.thread', thread_id=post.thread.id,
+                    page=post.thread.last_page()))  # todo - jump to post instead of last page
     elif request.method == 'GET':
         form.post.data = post.body
     return render_template('make_post.html', title='Edit Your Post', form=form, thread=post.thread)
@@ -327,7 +328,7 @@ def messages():
     page = request.args.get('page', 1, type=int)
     messages = current_user.messages_received.order_by(
         Message.timestamp.desc()).paginate(
-            page, current_app.config['POSTS_PER_PAGE'], False)
+        page, current_app.config['POSTS_PER_PAGE'], False)
     next_url = url_for('main.messages', page=messages.next_num) \
         if messages.has_next else None
     prev_url = url_for('main.messages', page=messages.prev_num) \
@@ -335,10 +336,12 @@ def messages():
     return render_template('messages.html', messages=messages,
                            next_url=next_url, prev_url=prev_url)
 
+
 def allowed_file(filename):
     allowed_extensions = set(['png', 'jpg', 'jpeg', 'gif'])
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in allowed_extensions
+
 
 @bp.route('/upload_emoji', methods=['GET', 'POST'])
 @login_required
@@ -357,21 +360,26 @@ def upload_emoji():
         return redirect(url_for('main.upload_emoji'))
     return render_template('upload_emoji.html', form=form)
 
-@bp.route('/reactions')
+
+@bp.route('/reactions', methods=['GET', 'POST'])
 @login_required
 def reactions():
-    post = Post.filter_by(id=request.args.get('post_id')).first()
-    emoji = Emoji.query.filter_by(name=request.args.get('reaction_type')).first()
-
+    post = Post.query.filter_by(id=request.form['post_id']).first()
+    emoji = Emoji.query.filter_by(name=request.form['reaction_type']).first()
+    print(post.id)
     if post and emoji:
-        reaction = PostReaction(post=post, emoji=emoji)
-        db.session.add(reaction)
-        db.session.commit()
+        if not PostReaction.query.filter_by(post=post, emoji=emoji, user=current_user).first():
+            reaction = PostReaction(post=post, emoji=emoji, user=current_user)
+            db.session.add(reaction)
+            db.session.commit()
 
     reactions = []
     if post:
-        reactions = post.reactions # todo - test if there are no reactions
-    return render_template('reactions.html', reactions=reactions)
+        # [reactions.append(r.emoji.name) for r in post.reactions]
+        reactions = post.reactions
+    return render_template('_reactions.html', reactions=reactions)
+
+    # return jsonify({'reactions': reactions})
 
 # @bp.route('/react', methods=['POST'])
 # @login_required

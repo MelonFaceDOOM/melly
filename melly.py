@@ -9,5 +9,5 @@ def make_shell_context():
     return {
         'db': db, 'User': User, 'Post': Post, 'Thread': Thread, 'Category': Category,
         'UserThreadMetadata': UserThreadMetadata, 'Message': Message, 'Notification': Notification,
-        'PostReactions': PostReaction, 'Emoji': Emoji
+        'PostReaction': PostReaction, 'Emoji': Emoji
     }

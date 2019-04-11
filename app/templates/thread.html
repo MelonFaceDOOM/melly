@@ -41,22 +41,6 @@
 {% endblock %}
 
 {% block scripts %}
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-    <script type=text/javascript>
-        $('#reactButton').on('click', function() {
-            var post_id = $(this).attr('post_id');
-
-            $.ajax({
-                url: "{{ url_for('main.reactions') }}",
-                type: 'POST',
-                data: {post_id: post_id, reaction_type: "like"},
-                success: function(response) {
-                    $("#post_footer_reactions").html(response);
-                }
-                error: function(xhr) {
-                    //handle error
-                }
-            });
-        });
-    </script>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="{{ url_for('static', filename='js/emoji_react.js') }}"></script>
 {% endblock %}

@@ -279,7 +279,7 @@ class Emoji(db.Model):
     # stores reaction images
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(140))
-    icon_path = db.Column(db.String(140))
+    icon_path = db.Column(db.String(140))  # todo - rename to filename
     posts = db.relationship('PostReaction', backref='emoji', lazy='dynamic')
 
     def __repr__(self):
