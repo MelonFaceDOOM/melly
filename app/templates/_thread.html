@@ -32,15 +32,13 @@
                 {% set last_post = thread.last_post() %}
                 {% if last_post %}
                     
-                    {% set user_link %}
-                        <a href="{{ url_for('main.user', username=last_post.author.username) }}">
-                            {{ last_post.author.username }}
-                        </a>
-                    {% endset %}
-
-                    {{ thread_link }}
-                     by {{ user_link }}
-                    {{ moment(last_post.timestamp).format('MMMM Do YYYY, h:mm:ss a') }}
+                    by
+                    <a href="{{ url_for('main.user', username=last_post.author.username) }}">
+                        {{ last_post.author.username -}}
+                    </a>,
+                    <a href="{{ url_for('main.thread', thread_id=thread.id) }}">
+                        {{ moment(last_post.timestamp).format('MMMM Do YYYY, h:mm:ss a') }}
+                    </a>
                 {% else %}
                     N/A
                 {% endif %} 

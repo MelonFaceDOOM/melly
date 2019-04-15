@@ -6,9 +6,19 @@
     {% for post in posts.items %}
         {% include '_post.html' %}
     {% endfor %}
+    <div class="lead emoji-picker-container">
     {% if form %}
-    {{ wtf.quick_form(form) }}
+        <form class="form form-horizontal" method="post" role="form">
+        {{ form.hidden_tag() }}
+        {{ wtf.form_errors(form, hiddens="only") }}
+        {{ wtf.form_field(form.post) }}
+        <!--{{ form.post() }}-->
+        {{ wtf.form_field(form.submit) }}
+        </form>
     {% endif %}
+    </div>
+
+
     
     <nav aria-label="...">
         <ul class="pager">
@@ -41,6 +51,28 @@
 {% endblock %}
 
 {% block scripts %}
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
     <script src="{{ url_for('static', filename='js/emoji_react.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/config.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/util.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.emojiarea.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/emoji-picker.js') }}"></script>
+    <script>
+
+          $(function() {
+            // Initializes and creates emoji set from sprite sheet
+            window.emojiPicker = new EmojiPicker({
+              emojiable_selector: '[data-emojiable=true]',
+              assetsPath: '{{url_for('static', filename='img/')}}',
+              popupButtonClasses: 'fa fa-smile-o'
+            });
+            // Finds all elements with `emojiable_selector` and converts them to rich emoji input fields
+            // You may want to delay this step if you have dynamically created input fields that appear later in the loading process
+            // It can be called as many times as necessary; previously converted input fields will not be converted again
+            window.emojiPicker.discover();
+          });
+
+    </script>
+
 {% endblock %}

@@ -26,7 +26,7 @@ class EditProfileForm(FlaskForm):
 
 
 class PostForm(FlaskForm):
-    post = TextAreaField('Say something', validators=[DataRequired()])
+    post = TextAreaField('Say something', validators=[DataRequired()], render_kw={'data-emojiable': 'true'})
     submit = SubmitField('Submit')
 
 

@@ -164,10 +164,8 @@ th.small_avatar{
     text-align: right;
 }
 
+
 th.thread_author {
-    vertical-align: middle;
-    position: relative;
-    text-align: left;
     word-wrap: break-word;
 }
 

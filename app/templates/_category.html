@@ -18,7 +18,13 @@
             <th>Post Count</th>
             <th>Last Post</th>
         </tr>
-        {% for thread in category.active_threads(5) %}
-        {% include '_thread.html' %}
-        {% endfor %}
+        {% if active_threads %}
+            {% for thread in category.active_threads(active_threads) %}
+                {% include '_thread.html' %}
+            {% endfor %}
+        {% else %}
+            {% for thread in category.threads %}
+                {% include '_thread.html' %}
+            {% endfor %}
+        {% endif %}
     </table>

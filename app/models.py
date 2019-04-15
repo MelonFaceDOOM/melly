@@ -181,8 +181,10 @@ class Category(db.Model):
         thread_last_post_times = []
         for t in self.threads:
             p = t.last_post()
-            if p is not None:
-                thread_last_post_times.append((p.thread, p.timestamp))
+            if p is None:
+                thread_last_post_times.append((t, t.timestamp))
+            else:
+                thread_last_post_times.append((t, p.timestamp))
         sorted_threads = sorted(thread_last_post_times, key=itemgetter(1), reverse=True)
         sorted_threads = [thread[0] for thread in sorted_threads]
         return sorted_threads[:number_of_threads]
