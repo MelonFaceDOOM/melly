@@ -10,6 +10,7 @@ import os
 from werkzeug.utils import secure_filename
 
 
+
 @bp.before_app_request
 def before_request():
     if current_user.is_authenticated:
@@ -122,7 +123,7 @@ def category(category_id):
 
 @bp.route('/cat/<category_id>/create_thread', methods=['GET', 'POST'])
 @login_required
-def create_thread(category_id):  # todo - update to include an initial post?
+def create_thread(category_id):
     category = Category.query.filter_by(id=category_id).first()
     if category is None:
         flash('category {} not found.'.format(category_id))
@@ -133,6 +134,9 @@ def create_thread(category_id):  # todo - update to include an initial post?
         thread = Thread(title=form.title.data, author=current_user, category=category)
         db.session.add(thread)
         db.session.commit()
+        post = Post(body=form.post.data, author=current_user, thread=thread)
+        db.session.add(post)
+        db.session.commit()
         flash('Your thread {} has been created! Make a first post!'.format(form.title.data))
         return redirect(url_for('main.thread', thread_id=thread.id))
     return render_template('create_thread.html', title='Create a new thread',
@@ -142,7 +146,7 @@ def create_thread(category_id):  # todo - update to include an initial post?
 @bp.route('/edit_thread/<thread_id>', methods=['GET', 'POST'])
 @login_required
 def edit_thread(thread_id):
-    # todo - add ability to move category to the form
+    # todo - add ability to move the thread to a different category in the form
     thread = Thread.query.filter_by(id=thread_id).first()
     if thread is None:
         flash('thread {} not found.'.format(thread_id))
@@ -175,12 +179,16 @@ def thread(thread_id):
     form = PostForm()
     if form.validate_on_submit():
         post = Post(body=form.post.data, author=current_user, thread=thread)
-        db.session.add(post)
-        db.session.commit()
-        flash('Your post is now live!')
+        if not post.is_duplicate():
+            db.session.add(post)
+            db.session.commit()
+            flash('Your post is now live!')
+        else:
+            flash('Please wait three seconds before spamming your garbage, {}'.format(current_user.username) )
 
+        anchor = 'p' + str(post.id)
         return redirect(
-            url_for('main.thread', thread_id=thread_id, page=thread.last_page()))  # todo add new-post anchor
+            url_for('main.thread', thread_id=thread_id, page=thread.last_page(), _anchor=anchor))
 
     # if page is not specified, find the user's last post and redirect to it.
     page = request.args.get('page', None, type=int)
@@ -224,7 +232,7 @@ def thread(thread_id):
 
 @bp.route('/quote/<post_id>', methods=['GET', 'POST'])
 @login_required
-def quote_post(post_id):  # todo - change to a dedicated post page and just put the quote text in.
+def quote_post(post_id):
     post = Post.query.filter_by(id=post_id).first()
     if post is None:
         flash('post {} not found.'.format(post_id))
@@ -269,9 +277,10 @@ def edit_post(post_id):
         post.body = form.post.data
         db.session.commit()
         flash('Your post has been edited')
+        anchor = 'p' + str(post.id)
         return redirect(
             url_for('main.thread', thread_id=post.thread.id,
-                    page=post.thread.last_page()))  # todo - jump to post instead of last page
+                    page=post.page(), anchor=anchor))
     elif request.method == 'GET':
         form.post.data = post.body
     return render_template('make_post.html', title='Edit Your Post', form=form, thread=post.thread)
@@ -378,32 +387,3 @@ def reactions():
         # [reactions.append(r.emoji.name) for r in post.reactions]
         reactions = post.reactions
     return render_template('_reactions.html', reactions=reactions)
-
-    # return jsonify({'reactions': reactions})
-
-# @bp.route('/react', methods=['POST'])
-# @login_required
-# def react():
-#     post = Post.filter_by(id=request.form['post_id']).first()
-#     emoji = Emoji.query.filter_by(name=request.form['reaction_type']).first()
-#
-#     reaction = PostReaction(post=post,emoji=emoji)  # todo - add check in case reaction is not found
-#     db.session.add(reaction)
-#     db.session.commit()
-#
-#     reactions = post.reactions
-#     return jsonify({'result': 'success', 'reactions': reactions})
-
-
-# @bp.route('/react', methods=['POST'])
-# @login_required
-# def react():
-#     reaction_type = request.args.get('reaction_type')
-#     post_id = request.args.get('post_id')
-#     reaction = PostReaction.query.filter_by(user=current_user, post_id=post_id, reaction_type=reaction_type).first()
-#     if reaction is None:
-#         reaction = PostReaction(user=current_user, post_id=post_id, reaction_type=reaction_type)
-#         db.session.add(reaction)
-#         db.session.commit()
-#         # todo - refresh page
-#     return '', 204

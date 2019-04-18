@@ -11,6 +11,8 @@ from app import db, login
 from app.search import add_to_index, remove_from_index, query_index
 import os
 import contextlib
+import postmarkup
+
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -246,9 +248,25 @@ class Post(SearchableMixin, db.Model):
         return '<Post {}>'.format(self.body)
 
     def page(self):
-        post_position = len(Post.query.filter_by(thread_id=self.thread_id).filter(Post.id <= self.id).all())
-        page = int((post_position - 1) / current_app.config['POSTS_PER_PAGE'] + 1)
-        return page
+        if self.thread_id:
+            post_position = len(Post.query.filter_by(thread_id=self.thread_id).filter(Post.id <= self.id).all())
+            page = int((post_position - 1) / current_app.config['POSTS_PER_PAGE'] + 1)
+            return page
+
+    def format(self):
+        return postmarkup.render_bbcode(self.body)
+
+    def is_duplicate(self):
+        # check the last post by this user in this  thread. If it is <3 and the same text, it is deemed a duplicate
+        posts = Post.query.filter_by(thread=self.thread, author=self.author).all()[:-1]
+        if len(posts) == 0:
+            return False
+        if (datetime.utcnow() - posts[-1].timestamp).total_seconds() > 3:  # calculate time since self won't have a
+            # timestamp until it is actually entered in the db
+            return False
+        if posts[-1].body != self.body:
+            return False
+        return True
 
 
 class UserThreadMetadata(db.Model):
@@ -292,6 +310,7 @@ class Emoji(db.Model):
             os.remove(self.icon_path)
         db.session.delete(self)
         db.session.commit()
+
 
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)

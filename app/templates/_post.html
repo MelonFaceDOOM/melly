@@ -23,7 +23,7 @@
             </a>
         </div>
         <div style="word-wrap: break-word" class="post_body">
-            <span>{{ post.body }}</span>
+            <span>{{ post.format() |safe }}</span>
         </div>
         <div class="post_footer_bar">
             <div class="post_footer_buttons">

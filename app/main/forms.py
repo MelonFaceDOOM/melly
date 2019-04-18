@@ -26,7 +26,7 @@ class EditProfileForm(FlaskForm):
 
 
 class PostForm(FlaskForm):
-    post = TextAreaField('Say something', validators=[DataRequired()], render_kw={'data-emojiable': 'true'})
+    post = TextAreaField(label="Make a post", validators=[DataRequired()])
     submit = SubmitField('Submit')
 
 
@@ -34,7 +34,7 @@ class CreateCategoryForm(FlaskForm):
     title = StringField('Category title', validators=[DataRequired()])
     submit = SubmitField('Submit')
 
-    def validate_title(self, category_title):  # todo - test removing category_title from this (same for thread & emoji)
+    def validate_title(self, category_title):
         category = Category.query.filter_by(title=self.title.data).first()
         if category is not None:
             raise ValidationError('Please use a different category name.')
@@ -42,6 +42,7 @@ class CreateCategoryForm(FlaskForm):
 
 class CreateThreadForm(FlaskForm):
     title = StringField('Thread title', validators=[DataRequired()])
+    post = TextAreaField('Make a post', validators=[DataRequired()])
     submit = SubmitField('Submit')
 
     def __init__(self, category_title, *args, **kwargs):
