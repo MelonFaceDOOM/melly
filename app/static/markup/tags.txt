@@ -1,0 +1,22 @@
+[
+    {
+        "name": "bold",
+        "start": "[b]",
+        "end": "[/b]",
+        "output_template": "<strong>{value}</strong>"
+    },
+
+    {
+        "name": "italics",
+        "start": "[i]",
+        "end": "[/i]",
+        "output_template": "<em>{value}</em>"
+    },
+
+    {
+        "name": "url",
+        "start": "[url]",
+        "end": "[/url]",
+        "output_template": "<a href={value}>{value}</a>"
+    }
+]

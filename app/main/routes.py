@@ -285,6 +285,30 @@ def edit_post(post_id):
         form.post.data = post.body
     return render_template('make_post.html', title='Edit Your Post', form=form, thread=post.thread)
 
+@bp.route('/delete_post/<post_id>')
+@login_required
+def delete_post(post_id):
+    post = Post.query.filter_by(id=post_id).first()
+    if post is None:
+        flash('post {} not found.'.format(post_id))
+        return redirect(url_for('main.index'))
+
+    if post.author.username is not current_user.username:
+        flash('You are not the author of post {}.'.format(post_id))
+        return redirect(url_for('main.thread', thread_id=post.thread.id,
+                                page=current_user.last_page_viewed(post.thread.id)))
+
+    # info for redirect
+    thread_id = post.thread.id
+    anchor = 'p' + str(post.id-1) # TODO: GET ID OF PREVIOUS POST IN THREAD
+
+    db.session.delete(post)
+    db.session.commit()
+
+    return redirect(
+        url_for('main.thread', thread_id=thread_id,
+                page=post.page(), anchor=anchor))
+
 
 @bp.route('/post/<post_id>')
 @login_required

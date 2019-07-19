@@ -39,10 +39,13 @@
 
                 {% if post.author == current_user %}
                 <span class="post_footer_button">
-                        <a href="{{ url_for('main.edit_post', post_id=post.id) }}">
-                            Edit
-                        </a>
-                    </span>
+                    <a href="{{ url_for('main.edit_post', post_id=post.id) }}">
+                        Edit
+                    </a>
+                    <a href="{{ url_for('main.delete_post', post_id=post.id) }}">
+                        Delete
+                    </a>
+                </span>
                 {% endif %}
             </div>
             <div class="post_footer_reactions" id="reactions{{ post.id }}">

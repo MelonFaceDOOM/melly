@@ -11,7 +11,7 @@ from app import db, login
 from app.search import add_to_index, remove_from_index, query_index
 import os
 import contextlib
-import postmarkup
+from app.static.markup import melon_markup
 
 
 class User(UserMixin, db.Model):
@@ -254,7 +254,7 @@ class Post(SearchableMixin, db.Model):
             return page
 
     def format(self):
-        return postmarkup.render_bbcode(self.body)
+        return melon_markup.parse(self.body)
 
     def is_duplicate(self):
         # check the last post by this user in this  thread. If it is <3 and the same text, it is deemed a duplicate
