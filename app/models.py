@@ -257,7 +257,7 @@ class Post(SearchableMixin, db.Model):
         return melon_markup.parse(self.body)
 
     def is_duplicate(self):
-        # check the last post by this user in this  thread. If it is <3 and the same text, it is deemed a duplicate
+        # check the last post by this user in this  thread. If it is <3 s behind and the same text, it is deemed a duplicate
         posts = Post.query.filter_by(thread=self.thread, author=self.author).all()[:-1]
         if len(posts) == 0:
             return False

@@ -300,7 +300,8 @@ def delete_post(post_id):
 
     # info for redirect
     thread_id = post.thread.id
-    anchor = 'p' + str(post.id-1) # TODO: GET ID OF PREVIOUS POST IN THREAD
+    previous_post = post.thread.posts.filter(Post.timestamp < post.timestamp)[-1]
+    anchor = 'p' + str(previous_post.id - 1)
 
     db.session.delete(post)
     db.session.commit()
