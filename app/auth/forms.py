@@ -2,6 +2,8 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo
 from app.models import User
+import re
+
 
 
 class LoginForm(FlaskForm):
@@ -21,6 +23,9 @@ class RegistrationForm(FlaskForm):
     submit = SubmitField('Register')
 
     def validate_username(self, username):
+        pattern = "^[A-z0-9!%^&*]+$"
+        if not bool(re.match(pattern, username.data)):
+            raise ValidationError('Please use only letters and numbers in your username')
         user = User.query.filter_by(username=username.data).first()
         if user is not None:
             raise ValidationError('Please use a different username.')

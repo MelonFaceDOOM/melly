@@ -254,6 +254,8 @@ class Post(SearchableMixin, db.Model):
             return page
 
     def format(self):
+        # TODO: instead, store these values as a 2nd post content variable in the Post model, so as to not
+        # TODO: have to re-run this every single time a thread is loaded
         return melon_markup.parse(self.body)
 
     def is_duplicate(self):

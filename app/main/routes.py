@@ -254,7 +254,7 @@ def quote_post(post_id):
         return redirect(
             url_for('main.thread', thread_id=thread.id, page=thread.last_page()))
     elif request.method == 'GET':
-        body = '[{}, {}: {}]'.format(post.author.username, post.timestamp, post.body)
+        body = '[quote,name={},time={}]{}[/quote]'.format(post.author.username, post.timestamp, post.body)
         form.post.data = body
     return render_template('make_post.html', title='Quote Post', form=form, thread=thread)
 
@@ -271,7 +271,7 @@ def edit_post(post_id):
         flash('You are not the author of post {}.'.format(post_id))
         return redirect(url_for('main.thread', thread_id=post.thread.id,
                                 page=current_user.last_page_viewed(post.thread.id)))
-
+    # TODO: add cancel button to PostForm
     form = PostForm()
     if form.validate_on_submit():
         post.body = form.post.data
@@ -280,7 +280,7 @@ def edit_post(post_id):
         anchor = 'p' + str(post.id)
         return redirect(
             url_for('main.thread', thread_id=post.thread.id,
-                    page=post.page(), anchor=anchor))
+                    page=post.page(), _anchor=anchor))
     elif request.method == 'GET':
         form.post.data = post.body
     return render_template('make_post.html', title='Edit Your Post', form=form, thread=post.thread)
@@ -301,14 +301,14 @@ def delete_post(post_id):
     # info for redirect
     thread_id = post.thread.id
     previous_post = post.thread.posts.filter(Post.timestamp < post.timestamp)[-1]
-    anchor = 'p' + str(previous_post.id - 1)
+    anchor = 'p' + str(previous_post.id)
 
     db.session.delete(post)
     db.session.commit()
 
     return redirect(
         url_for('main.thread', thread_id=thread_id,
-                page=post.page(), anchor=anchor))
+                page=post.page(), _anchor=anchor))
 
 
 @bp.route('/post/<post_id>')

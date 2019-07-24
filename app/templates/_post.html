@@ -26,31 +26,34 @@
             <span>{{ post.format() |safe }}</span>
         </div>
         <div class="post_footer_bar">
-            <div class="post_footer_buttons">
-                    <span class="post_footer_button">
-                        <button class="btn btn-primary reactButton" id="reactButton"
-                                post_id="{{ post.id }}">Like</button>
-                    </span>
-                <span class="post_footer_button">
-                        <a href="{{ url_for('main.quote_post', post_id=post.id) }}">
-                            Quote
-                        </a>
-                    </span>
-
-                {% if post.author == current_user %}
-                <span class="post_footer_button">
-                    <a href="{{ url_for('main.edit_post', post_id=post.id) }}">
-                        Edit
-                    </a>
-                    <a href="{{ url_for('main.delete_post', post_id=post.id) }}">
-                        Delete
-                    </a>
-                </span>
-                {% endif %}
-            </div>
             <div class="post_footer_reactions" id="reactions{{ post.id }}">
                 {% set reactions = post.reactions %}
                 {% include '_reactions.html' %}
+            </div>
+            <div class="post_footer_buttons">
+                <span class="post_footer_button">
+                    <button class="btn btn-outline-primary reactButton" id="reactButton" post_id="{{ post.id }}">
+                        Like
+                    </button>
+                </span>
+                <span class="post_footer_button">
+                    <form action="{{ url_for('main.quote_post', post_id=post.id) }}">
+                        <input type="submit" class="btn btn-outline-primary" value="Quote">
+                    </form>
+                </span>
+
+                {% if post.author == current_user %}
+                <span class="post_footer_button">
+                    <form action="{{ url_for('main.edit_post', post_id=post.id) }}">
+                        <input type="submit" class="btn btn-outline-warning" value="Edit">
+                    </form>
+                </span>
+                <span class="post_footer_button">
+                    <form action="{{ url_for('main.delete_post', post_id=post.id) }}">
+                        <input type="submit" class="btn btn-outline-danger" value="Delete">
+                    </form>
+                </span>
+                {% endif %}
             </div>
         </div>
     </div>
