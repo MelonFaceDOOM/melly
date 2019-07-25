@@ -1,18 +1,23 @@
-import re 
+import re
+from flask import url_for
+
 def format_quote(tag, string):
-    start_pattern = "\[quote(, *name=([A-z0-9!%^&*]+)){0,1}(, *time=([0-9 :.-]+)){0,1}\]"
 
     # find start_tag and extract arguments if present
-    match = re.match(start_pattern, string)
+    match = re.match(tag.start, string)
     start_tag = match.group()
     name = match.groups()[1] if match.groups()[1] else ""
     time = " - {}".format(match.groups()[3]) if match.groups()[3] else ""
-    footer = name + time
+    citation = name + time
+    if match.groups()[5]:
+        url = url_for("main.post", post_id=match.groups()[5])
+        citation = "<a href={}>{}</a>".format(url, citation)
 
     end_tag_pos = string.find("[/quote]")
     value = string[len(start_tag):end_tag_pos]
 
-    formatted = '<blockquote><p class="mb-0">{}</p><footer class="blockquote-footer"><cite>{}</cite></footer></blockquote>'.format(value, footer)
+    formatted = '<blockquote><footer class="blockquote-footer"><cite>{}</cite></footer><p class="mb-0">{}' \
+                '</p></blockquote>'.format(citation, value)
     return formatted
 
 def simple_replace(tag, string):
@@ -52,7 +57,7 @@ tags = [
 
     {
         "name": "quote",
-        "start": "\[quote(, *name=[A-z0-9!%^&*]+){0,1}(, *time=[0-9 :.-]+){0,1}\]",
+        "start": "\[quote(, *name=([A-z0-9!%^&*]+)){0,1}(, *time=([0-9 :.-]+)){0,1}(, *post_id=([0-9]+)){0,1}\]",
         "end":  "[/quote]",
         "output_template": "",
         "format_func": format_quote

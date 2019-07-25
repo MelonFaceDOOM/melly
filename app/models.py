@@ -12,6 +12,7 @@ from app.search import add_to_index, remove_from_index, query_index
 import os
 import contextlib
 from app.static.markup import melon_markup
+from sqlalchemy.event import listens_for
 
 
 class User(UserMixin, db.Model):
@@ -19,6 +20,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
+    mod_level = db.Column(db.Integer, index=True)
     posts = db.relationship('Post', backref='author', lazy='dynamic')
     threads = db.relationship('Thread', backref='author', lazy='dynamic')
     categories = db.relationship('Category', backref='author', lazy='dynamic')
@@ -32,6 +34,7 @@ class User(UserMixin, db.Model):
                                         backref='recipient', lazy='dynamic')
     notifications = db.relationship('Notification', backref='user', lazy='dynamic')
     reactions_given = db.relationship('PostReaction', backref='user', lazy='dynamic')
+
 
     def __repr__(self):
         return '<User {}>'.format(self.username)
@@ -239,6 +242,7 @@ class Post(SearchableMixin, db.Model):
     __searchable__ = ['body']
     id = db.Column(db.Integer, primary_key=True)
     body = db.Column(db.String(140))
+    body_formatted = db.Column(db.String(140))
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     thread_id = db.Column(db.Integer, db.ForeignKey('thread.id'))
@@ -254,9 +258,7 @@ class Post(SearchableMixin, db.Model):
             return page
 
     def format(self):
-        # TODO: instead, store these values as a 2nd post content variable in the Post model, so as to not
-        # TODO: have to re-run this every single time a thread is loaded
-        return melon_markup.parse(self.body)
+        self.body_formatted = melon_markup.parse(self.body)
 
     def is_duplicate(self):
         # check the last post by this user in this  thread. If it is <3 s behind and the same text, it is deemed a duplicate
@@ -269,6 +271,10 @@ class Post(SearchableMixin, db.Model):
         if posts[-1].body != self.body:
             return False
         return True
+
+@listens_for(Post, 'before_insert')
+def post_defaults(mapper, configuration, target):
+    target.body_formatted = melon_markup.parse(target.body)
 
 
 class UserThreadMetadata(db.Model):

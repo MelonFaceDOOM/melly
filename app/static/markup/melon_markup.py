@@ -56,8 +56,10 @@ def parse(s):
             return s
         # encountering end tags
         elif s[pos:pos + 2] == "[/":
+            tag_identified = False
             for tag in tags:
                 if s[pos:].startswith(tag.end):
+                    tag_identified = True
                     if tag.openings:
                         tag_opening_pos = tag.openings[-1]
                         len_before = len(s)
@@ -84,6 +86,9 @@ def parse(s):
                         # if there is an end tag with no opening tag, skip past it.
                         pos += len(tag.end)
                         break
+
+                if not tag_identified:
+                        pos += 2
 
         # encountering the start of opening tags
         elif s[pos] == "[":

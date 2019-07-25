@@ -10,7 +10,6 @@ import os
 from werkzeug.utils import secure_filename
 
 
-
 @bp.before_app_request
 def before_request():
     if current_user.is_authenticated:
@@ -180,6 +179,7 @@ def thread(thread_id):
     if form.validate_on_submit():
         post = Post(body=form.post.data, author=current_user, thread=thread)
         if not post.is_duplicate():
+            post.format()
             db.session.add(post)
             db.session.commit()
             flash('Your post is now live!')
@@ -254,7 +254,8 @@ def quote_post(post_id):
         return redirect(
             url_for('main.thread', thread_id=thread.id, page=thread.last_page()))
     elif request.method == 'GET':
-        body = '[quote,name={},time={}]{}[/quote]'.format(post.author.username, post.timestamp, post.body)
+        body = '[quote,name={},time={},post_id={}]{}[/quote]'.format(post.author.username, post.timestamp,
+                                                                     post.id, post.body)
         form.post.data = body
     return render_template('make_post.html', title='Quote Post', form=form, thread=thread)
 
@@ -275,6 +276,7 @@ def edit_post(post_id):
     form = PostForm()
     if form.validate_on_submit():
         post.body = form.post.data
+        post.format()  # updates post.body_formatted
         db.session.commit()
         flash('Your post has been edited')
         anchor = 'p' + str(post.id)
@@ -317,9 +319,10 @@ def post(post_id):
     post = Post.query.filter_by(id=post_id).first()
     if post is None:
         flash('post {} not found.'.format(post_id))
-        return redirect(url_for('main.index'))
-
-    return render_template('post.html', title='View single post', thread=post.thread, post=post)
+        return '', 204
+    anchor = 'p' + str(post.id)
+    return redirect(url_for("main.thread", thread_id=post.thread.id,
+                            page=post.page(), _anchor=anchor))
 
 
 @bp.route('/search')
@@ -412,3 +415,8 @@ def reactions():
         # [reactions.append(r.emoji.name) for r in post.reactions]
         reactions = post.reactions
     return render_template('_reactions.html', reactions=reactions)
+
+@bp.route('/reaction_menu')
+@login_required
+def reaction_menu():
+    return render_template('reaction_menu.html')

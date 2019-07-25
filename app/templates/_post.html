@@ -23,7 +23,7 @@
             </a>
         </div>
         <div style="word-wrap: break-word" class="post_body">
-            <span>{{ post.format() |safe }}</span>
+            <span>{{ post.body_formatted |safe }}</span>
         </div>
         <div class="post_footer_bar">
             <div class="post_footer_reactions" id="reactions{{ post.id }}">
