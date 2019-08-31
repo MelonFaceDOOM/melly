@@ -1,11 +1,8 @@
-from flask import current_app
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, TextAreaField
 from wtforms.validators import ValidationError, DataRequired, Length
-from app.models import User, Thread, Category, Emoji
+from app.models import User, Thread, Category
 from flask import request
-from flask_wtf.file import FileField, FileRequired
-import os
 
 
 class EditProfileForm(FlaskForm):
@@ -71,19 +68,3 @@ class MessageForm(FlaskForm):
     message = TextAreaField('Message', validators=[
         DataRequired(), Length(min=0, max=140)])
     submit = SubmitField('Submit')
-
-
-class UploadEmojiForm(FlaskForm):
-    emoji_name = TextAreaField('emoji name', validators=[
-        DataRequired(), Length(min=0, max=140)])
-    file = FileField(validators=[FileRequired()])
-    submit = SubmitField('Submit')
-
-    def validate_emoji_name(self, emoji_name):
-        emoji = Emoji.query.filter_by(name=self.emoji_name.data).first()
-        if emoji is not None:
-            raise ValidationError('This emoji name is already in use.')
-
-        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], self.file.data.filename)
-        if os.path.isfile(filepath):
-            raise ValidationError('This filename already exists. Please rename your file.')

@@ -1,0 +1,9 @@
+        <div class="emoji-grid" post_id="{{ post_id }}">
+        {% for emoji in emojis %}
+        <div class="reaction_box", name="{{ emoji.name }}">
+            <a href="javascript:void(0)">
+                <img class="reaction" src="{{ url_for('static', filename=emoji.small_path) }}">
+            </a>
+        </div>
+        {% endfor %}
+        </div>

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+
+
+    <h1>Emoji</h1>
+    <hr>
+
+    <form name="uploadEmoji" method="POST" enctype="multipart/form-data" action="/emojis" onsubmit="return validate({{ max_emoji_size }})">
+      <input type="file" id="images" name="images" multiple="">
+      <input type="submit" value="add">
+    </form>
+
+
+    <br>
+    <h3>Existing Emoji</h3>
+    <br>
+    {% for emoji in emojis %}
+    <div class="emoji-row">
+        <div class="reaction_box" name="{{ emoji.name }}">
+            <img class="reaction" src="{{ url_for('static', filename=emoji.small_path) }}">
+        </div>
+        <input type="text" name="customer_name", value="{{ emoji.name }}">
+<!--        TODO: if user is admin...-->
+        <a class="delete_emoji" href="{{ url_for('main.delete_emoji', emoji_id=emoji.id) }}">
+            x
+        </a>
+    </div>
+    <br>
+    {% endfor %}
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+<script>
+function validate(max_emoji_size) {
+    var files = document.getElementById('images').files;
+    for (var x in files) {
+        if (files[x].size > max_emoji_size) {
+            alert(files[x].name + " exceeds the limit of " + max_emoji_size.toString() + " bytes");
+            return false;
+        }
+    }
+}
+</script>
+{% endblock %}
+

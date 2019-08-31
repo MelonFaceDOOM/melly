@@ -7,19 +7,22 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 import json
+import re
 from app import db, login
 from app.search import add_to_index, remove_from_index, query_index
 import os
 import contextlib
 from app.static.markup import melon_markup
 from sqlalchemy.event import listens_for
+from PIL import Image
+from app.static.avatars.random_avatar import random_avatar
 
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
-    email = db.Column(db.String(120), index=True, unique=True)
-    password_hash = db.Column(db.String(128))
+    email = db.Column(db.String(140), index=True, unique=True)
+    password_hash = db.Column(db.String(140))
     mod_level = db.Column(db.Integer, index=True)
     posts = db.relationship('Post', backref='author', lazy='dynamic')
     threads = db.relationship('Thread', backref='author', lazy='dynamic')
@@ -28,6 +31,7 @@ class User(UserMixin, db.Model):
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
     threads_visited = db.relationship('UserThreadMetadata', backref='user', lazy='dynamic')
     last_message_read_time = db.Column(db.DateTime)
+    avatar_path = db.Column(db.String(140))
     messages_sent = db.relationship('Message', foreign_keys='Message.sender_id',
                                     backref='author', lazy='dynamic')
     messages_received = db.relationship('Message', foreign_keys='Message.recipient_id',
@@ -44,11 +48,6 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-
-    def avatar(self, size):
-        digest = md5(self.email.lower().encode('utf-8')).hexdigest()
-        return 'https://www.gravatar.com/avatar/{}?d=identicon&s={}'.format(
-            digest, size)
 
     def new_messages(self):
         last_read_time = self.last_message_read_time or datetime(1900, 1, 1)
@@ -110,10 +109,13 @@ class User(UserMixin, db.Model):
         if not utm.last_viewed_timestamp:
             return None, None
         posts = thread.posts.order_by(Post.timestamp.asc()).filter(Post.timestamp <= utm.last_viewed_timestamp).all()
-        pos = len(posts)  # the number of posts in thread that are older than the user's last-read post timestamp
-        page_num = 1 + int((pos - 1) / current_app.config['POSTS_PER_PAGE'])  # pagenumber
-        post_id = posts[-1].id  # id of the post closest to the user's last-read post timestamp
-        return page_num, post_id
+        if posts:
+            pos = len(posts)  # the number of posts in thread that are older than the user's last-read post timestamp
+            page_num = 1 + int((pos - 1) / current_app.config['POSTS_PER_PAGE'])  # pagenumber
+            post_id = posts[-1].id  # id of the post closest to the user's last-read post timestamp
+            return page_num, post_id
+        else:
+            return None, None
 
     def get_reset_password_token(self, expires_in=600):
         return jwt.encode(
@@ -131,68 +133,14 @@ class User(UserMixin, db.Model):
         return User.query.get(id)
 
 
+@listens_for(User, 'before_insert')
+def user_defaults(mapper, configuration, target):
+    target.avatar_path = random_avatar()
+
+
 @login.user_loader
 def load_user(id):
     return User.query.get(int(id))
-
-
-class Thread(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(140))
-    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    category_id = db.Column(db.Integer, db.ForeignKey('category.id'))
-    posts = db.relationship('Post', backref='thread', lazy='dynamic')
-    users_visited = db.relationship('UserThreadMetadata', backref='thread', lazy='dynamic')
-
-    def __repr__(self):
-        return '<Thread {}>'.format(self.title)
-
-    def post_count(self):
-        count = self.posts.count()
-        return count
-
-    def last_post(self):
-        last_post_in_thread = Post.query.filter_by(thread_id=self.id).order_by(Post.timestamp.desc()).first()
-        return last_post_in_thread
-
-    def last_page(self):
-        last_page = int((self.posts.count() - 1) / current_app.config['POSTS_PER_PAGE'] + 1)
-        return last_page
-
-
-class Category(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(140), index=True, unique=True)
-    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    threads = db.relationship('Thread', backref='category', lazy='dynamic')
-
-    def __repr__(self):
-        return '<Category {}>'.format(self.title)
-
-    def post_count(self):
-        count = sum([t.posts.count() for t in self.threads])
-        return count
-
-    def last_post(self):
-        # Post where Post.thread_id == (Thread where Thread.category_id == self.id).id
-        last_post_in_category = Post.query.join(Thread, Thread.id == Post.thread_id).filter(
-            Thread.category_id == self.id).order_by(
-            Post.timestamp.desc()).first()
-        return last_post_in_category
-
-    def active_threads(self, number_of_threads):
-        thread_last_post_times = []
-        for t in self.threads:
-            p = t.last_post()
-            if p is None:
-                thread_last_post_times.append((t, t.timestamp))
-            else:
-                thread_last_post_times.append((t, p.timestamp))
-        sorted_threads = sorted(thread_last_post_times, key=itemgetter(1), reverse=True)
-        sorted_threads = [thread[0] for thread in sorted_threads]
-        return sorted_threads[:number_of_threads]
 
 
 class SearchableMixin(object):
@@ -272,9 +220,72 @@ class Post(SearchableMixin, db.Model):
             return False
         return True
 
+
 @listens_for(Post, 'before_insert')
 def post_defaults(mapper, configuration, target):
     target.body_formatted = melon_markup.parse(target.body)
+
+
+class Thread(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(140))
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    category_id = db.Column(db.Integer, db.ForeignKey('category.id'))
+
+    pinned_post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
+    posts = db.relationship('Post', backref='thread', primaryjoin=id==Post.thread_id, lazy='dynamic')
+    pinned_post = db.relationship('Post', primaryjoin=pinned_post_id==Post.id)
+    users_visited = db.relationship('UserThreadMetadata', backref='thread', lazy='dynamic')
+
+    def __repr__(self):
+        return '<Thread {}>'.format(self.title)
+
+    def post_count(self):
+        count = self.posts.count()
+        return count
+
+    def last_post(self):
+        last_post_in_thread = Post.query.filter_by(thread_id=self.id).order_by(Post.timestamp.desc()).first()
+        return last_post_in_thread
+
+    def last_page(self):
+        last_page = int((self.posts.count() - 1) / current_app.config['POSTS_PER_PAGE'] + 1)
+        return last_page
+
+
+class Category(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(140), index=True, unique=True)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    threads = db.relationship('Thread', backref='category', lazy='dynamic')
+
+    def __repr__(self):
+        return '<Category {}>'.format(self.title)
+
+    def post_count(self):
+        count = sum([t.posts.count() for t in self.threads])
+        return count
+
+    def last_post(self):
+        # Post where Post.thread_id == (Thread where Thread.category_id == self.id).id
+        last_post_in_category = Post.query.join(Thread, Thread.id == Post.thread_id).filter(
+            Thread.category_id == self.id).order_by(
+            Post.timestamp.desc()).first()
+        return last_post_in_category
+
+    def active_threads(self, number_of_threads):
+        thread_last_post_times = []
+        for t in self.threads:
+            p = t.last_post()
+            if p is None:
+                thread_last_post_times.append((t, t.timestamp))
+            else:
+                thread_last_post_times.append((t, p.timestamp))
+        sorted_threads = sorted(thread_last_post_times, key=itemgetter(1), reverse=True)
+        sorted_threads = [thread[0] for thread in sorted_threads]
+        return sorted_threads[:number_of_threads]
 
 
 class UserThreadMetadata(db.Model):
@@ -307,7 +318,8 @@ class Emoji(db.Model):
     # stores reaction images
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(140))
-    icon_path = db.Column(db.String(140))  # todo - rename to filename
+    file_path = db.Column(db.String(140))
+    small_path = db.Column(db.String(140))
     posts = db.relationship('PostReaction', backref='emoji', lazy='dynamic')
 
     def __repr__(self):
@@ -315,9 +327,52 @@ class Emoji(db.Model):
 
     def delete(self):
         with contextlib.suppress(FileNotFoundError):
-            os.remove(self.icon_path)
+            os.remove(self.file_path)
         db.session.delete(self)
         db.session.commit()
+
+
+def resize_image(filepath, max_dimension=128, save_path=None):
+    img = Image.open(filepath)
+
+    if save_path is None:
+        save_path = filepath
+
+    if img.size[0] > max_dimension and img.size[0] > img.size[1]:
+        percent = (max_dimension / float(img.size[0]))
+        height = int((float(img.size[1]) * float(percent)))
+        img = img.resize((max_dimension, height), Image.ANTIALIAS)
+
+    if img.size[1] > max_dimension and img.size[1] > img.size[0]:
+        percent = (max_dimension / float(img.size[1]))
+        width = int((float(img.size[0]) * float(percent)))
+        img = img.resize((width, max_dimension), Image.ANTIALIAS)
+    print(save_path)
+    img.save(save_path)
+    return save_path
+
+
+@listens_for(Emoji, 'before_insert')
+def emoji_defaults(mapper, configuration, target):
+
+    source_path = os.path.join("app", "static", target.file_path)
+    retries = 0
+    while True:
+        pattern = r"(.+)[.](.+?$)"
+        match = re.match(pattern, source_path)
+        if match is None:
+            return None
+        save_path = match.groups()[0] + "_s." + match.groups()[1]
+        if not os.path.exists(save_path) or retries > 20:
+            break
+        retries += 1
+    else:
+        return None
+
+    print(save_path)
+    save_path = resize_image(source_path, max_dimension=80, save_path=save_path)
+    save_path = os.path.relpath(save_path, os.path.join(os.getcwd(), "app", "static"))
+    target.small_path = save_path.replace("\\", "/")
 
 
 class Message(db.Model):

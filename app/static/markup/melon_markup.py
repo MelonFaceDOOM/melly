@@ -87,8 +87,8 @@ def parse(s):
                         pos += len(tag.end)
                         break
 
-                if not tag_identified:
-                        pos += 2
+            if not tag_identified:
+                pos += 2
 
         # encountering the start of opening tags
         elif s[pos] == "[":

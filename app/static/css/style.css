@@ -163,3 +163,42 @@ th.small_avatar{
 th.thread_author {
     word-wrap: break-word;
 }
+
+.post_reactions {
+    max-width:100%
+}
+
+.emoji-grid {
+    display: grid;
+    grid-template-columns: 35px 35px 35px 35px 35px;
+    grid-gap: 2px;
+}
+
+.reaction_box {
+    color: var(--text-color-body);
+    border-radius: 0px;
+    padding: 0px;
+    height: 35px;
+    width: 35px;
+    float: left;
+}
+
+.popover{
+    max-width: 225px;
+}
+
+.reaction_menu {
+}
+
+img.reaction {
+    max-width:100%;
+    height:auto;
+}
+
+a.delete_emoji {
+    font-weight: bold;
+    font-size: 2em;
+    color: red;
+    vertical-align: center;
+}
+

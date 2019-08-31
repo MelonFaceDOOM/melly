@@ -3,6 +3,10 @@
 
 
 {% block app_content %}
+    {% if pinned_post %}
+        {% set post = pinned_post %}
+        {% include '_post.html' %}
+    {% endif %}
     {% for post in posts.items %}
         {% include '_post.html' %}
     {% endfor %}
@@ -43,6 +47,7 @@
 
 {% block scripts %}
     {{ super() }}
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="{{ url_for('static', filename='js/react_menu.js') }}"></script>
     <script src="{{ url_for('static', filename='js/emoji_react.js') }}"></script>
+
 {% endblock %}

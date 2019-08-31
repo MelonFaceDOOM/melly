@@ -2,12 +2,14 @@ from datetime import datetime
 from flask import render_template, flash, redirect, url_for, request, g, current_app, jsonify
 from flask_login import current_user, login_required
 from app import db
-from app.main.forms import (EditProfileForm, PostForm, CreateCategoryForm, CreateThreadForm, SearchForm, MessageForm,
-                            UploadEmojiForm)
+from app.main.forms import (EditProfileForm, PostForm, CreateCategoryForm, CreateThreadForm, SearchForm, MessageForm)
 from app.models import User, Post, Thread, Category, Message, PostReaction, Emoji
 from app.main import bp
 import os
+import re
+from sqlalchemy import func
 from werkzeug.utils import secure_filename
+from app.models import resize_image
 
 
 @bp.before_app_request
@@ -208,12 +210,15 @@ def thread(thread_id):
     posts = thread.posts.order_by(Post.timestamp.asc()).paginate(
         page, current_app.config['POSTS_PER_PAGE'], False)
 
+    pinned_post = thread.pinned_post
+
     next_url = url_for('main.thread', thread_id=thread_id,
                        page=posts.next_num) \
         if posts.has_next else None
     prev_url = url_for('main.thread', thread_id=thread_id,
                        page=posts.prev_num) \
         if posts.has_prev else None
+
 
     # add 1 view to the user's view count for this thread
     current_user.view_thread(thread=thread)
@@ -226,8 +231,43 @@ def thread(thread_id):
             last_viewed_timestamp=last_viewed_timestamp)
 
     return render_template('thread.html', title=thread.title, form=form,
-                           posts=posts, next_url=next_url, thread=thread,
-                           prev_url=prev_url)
+                           posts=posts, pinned_post=pinned_post, next_url=next_url,
+                           thread=thread, prev_url=prev_url)
+
+
+@bp.route('/reaction_menu', methods=['GET'])
+@login_required
+def reaction_menu():
+    page = request.args.get('page', 1, type=int)
+    post_id = request.args.get('post_id', 0, type=int)
+    emojis = Emoji.query.filter(Emoji.id > 0).order_by(Emoji.id.asc()).paginate(
+        page, 20, False)
+
+    next_emoji_url = url_for('main.reaction_menu', page=emojis.next_num, post_id=post_id) \
+        if emojis.has_next else None
+    prev_emoji_url = url_for('main.reaction_menu', page=emojis.prev_num, post_id=post_id) \
+        if emojis.has_prev else None
+
+    return render_template("_reaction_menu.html", emojis=emojis.items, pages=emojis.iter_pages(), starting_page=page,
+                           post_id=post_id, next_emoji_url=next_emoji_url, prev_emoji_url=prev_emoji_url)
+
+
+@bp.route('/search_emojis', methods=['GET'])
+@login_required
+def search_emojis():
+    # TODO: currently, when searching for emoji, it returns the entire reaction_menu
+    #   the problem with this is reaction_menu includes the user search bar
+    #   this means that whenever a search is registered, the bar is emptied
+    #   You need to separate out the emoji_grid into a different html and create a route that only generates it
+    search_string = request.args.get('search_string', "", type=str)
+
+    post_id = request.args.get('post_id', 0, type=int)
+    emojis = Emoji.query.all()
+    result = [e for e in emojis if e.name.startswith(search_string)]
+    result.sort(key=lambda x: x.name)
+    result = result[:20]
+    return render_template("_emoji_grid.html", emojis=result, starting_page=None, post_id=post_id,
+                           next_emoji_url=None, prev_emoji_url=None)
 
 
 @bp.route('/quote/<post_id>', methods=['GET', 'POST'])
@@ -251,8 +291,9 @@ def quote_post(post_id):
         db.session.add(post)
         db.session.commit()
         flash('Your post is now live!')
+        anchor = 'p' + str(post.id)
         return redirect(
-            url_for('main.thread', thread_id=thread.id, page=thread.last_page()))
+            url_for('main.thread', thread_id=thread.id, page=thread.last_page(), _anchor=anchor))
     elif request.method == 'GET':
         body = '[quote,name={},time={},post_id={}]{}[/quote]'.format(post.author.username, post.timestamp,
                                                                      post.id, post.body)
@@ -287,6 +328,7 @@ def edit_post(post_id):
         form.post.data = post.body
     return render_template('make_post.html', title='Edit Your Post', form=form, thread=post.thread)
 
+
 @bp.route('/delete_post/<post_id>')
 @login_required
 def delete_post(post_id):
@@ -302,8 +344,12 @@ def delete_post(post_id):
 
     # info for redirect
     thread_id = post.thread.id
-    previous_post = post.thread.posts.filter(Post.timestamp < post.timestamp)[-1]
-    anchor = 'p' + str(previous_post.id)
+    try:
+        previous_post = post.thread.posts.filter(Post.timestamp < post.timestamp)[-1]
+        anchor = 'p' + str(previous_post.id)
+    except IndexError:
+        # exception occurs when there is no previous post
+        anchor = ''
 
     db.session.delete(post)
     db.session.commit()
@@ -374,36 +420,100 @@ def messages():
                            next_url=next_url, prev_url=prev_url)
 
 
-def allowed_file(filename):
-    allowed_extensions = set(['png', 'jpg', 'jpeg', 'gif'])
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in allowed_extensions
+def valid_extension(filepath):
+    allowed_extensions = ("gif", "png", "jpg", "jpeg", "ico", "bmp", "svg", "tif", "tiff")
+    pattern = ".+[.](.+)"
+    try:
+        extension = re.match(pattern, filepath).groups()[0]
+    except AttributeError:
+        return False
+    if extension not in allowed_extensions:
+        return False
+    return True
 
 
-@bp.route('/upload_emoji', methods=['GET', 'POST'])
+@bp.route('/emojis', methods=['GET', 'POST'])
 @login_required
-def upload_emoji():
-    form = UploadEmojiForm()
-    if form.validate_on_submit():
-        emoji_name = form.emoji_name.data
-        file = form.file.data
-        filename = secure_filename(file.filename)
-        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-        file.save(filepath)
+def emojis():
+    if request.method == 'POST':
+        images = request.files.getlist("images")
+        for image in images:
 
-        emoji = Emoji(name=emoji_name, icon_path=filepath)
-        db.session.add(emoji)
+            if len(Emoji.query.all()) > 300:
+                return "Max emoji limit reached", 400
+
+            filename = secure_filename(image.filename)
+
+            if not valid_extension(filename):
+                continue  # TODO: communicate back to client that image was skipped over
+
+            # Save as unique filename
+            retries = 0
+            while retries < 999:
+                filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], "emojis", filename)
+                if not os.path.exists(filepath):
+                    image.save(filepath)
+                    break
+                else:
+                    pattern = r'(.+?)' + '({})*'.format(retries-1) + r'(\.[^.\\/:*?"<>|\r\n]+$)'
+                    match = re.match(pattern, filename)
+                    filename = match.groups()[0] + str(retries) + match.groups()[2]
+                    retries += 1
+
+            if os.stat(filepath).st_size > current_app.config['MAX_EMOJI_SIZE']:
+                os.remove(filepath)
+                continue  # TODO: communicate back to client that image was skipped over
+
+            # rel_path is like "app/static/images/emoji/filename.jpg"
+            # rel_static_path is like "images/emoji/filename.jpg"
+            # the first is needed for file-saving. The second is needed for rendering on the webpage
+            rel_path = os.path.relpath(filepath, os.getcwd())
+            rel_static_path = os.path.relpath(filepath, os.path.join(os.getcwd(), "app", "static"))
+            rel_path = rel_path.replace("\\", "/")
+            rel_static_path = rel_static_path.replace("\\", "/")
+            resize_image(rel_path)
+
+            # create unique emoji name
+            # this has fewer retries because it involves a database query and will only ever even require a
+            # retry if someone else uploads an emoji at the exact same moment
+            retries = 0
+            while retries < 10:
+                try:
+                    total_emojis = len(Emoji.query.all())
+                except:
+                    total_emojis = 0
+                if total_emojis > 0:
+                    emoji_id = db.session.query(func.max(Emoji.id)).first()[0] + 1
+                else:
+                    emoji_id = 1
+                emoji_name = "emoji_" + str(emoji_id)
+                emoji = Emoji(name=emoji_name, file_path=rel_static_path)
+                try:
+                    db.session.add(emoji)
+                    db.session.commit()
+                    break
+                except:
+                    retries += 1
+        return redirect(url_for("main.emojis"))
+
+    emojis = Emoji.query.all()
+    return render_template("emojis.html", emojis=emojis, max_emoji_size=current_app.config['MAX_EMOJI_SIZE'])
+
+
+@bp.route('/delete_emoji/<emoji_id>')
+@login_required
+def delete_emoji(emoji_id):
+    emoji = Emoji.query.filter_by(id=emoji_id).first()
+    if emoji:
+        db.session.delete(emoji)
         db.session.commit()
-        return redirect(url_for('main.upload_emoji'))
-    return render_template('upload_emoji.html', form=form)
-
+    return redirect(url_for('main.emojis'))
 
 @bp.route('/reactions', methods=['GET', 'POST'])
 @login_required
 def reactions():
     post = Post.query.filter_by(id=request.form['post_id']).first()
     emoji = Emoji.query.filter_by(name=request.form['reaction_type']).first()
-    print(post.id)
     if post and emoji:
         if not PostReaction.query.filter_by(post=post, emoji=emoji, user=current_user).first():
             reaction = PostReaction(post=post, emoji=emoji, user=current_user)
@@ -415,8 +525,3 @@ def reactions():
         # [reactions.append(r.emoji.name) for r in post.reactions]
         reactions = post.reactions
     return render_template('_reactions.html', reactions=reactions)
-
-@bp.route('/reaction_menu')
-@login_required
-def reaction_menu():
-    return render_template('reaction_menu.html')

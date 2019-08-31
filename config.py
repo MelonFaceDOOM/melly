@@ -21,8 +21,7 @@ class Config(object):
     THREADS_PER_PAGE = 25
     CATEGORIES_PER_PAGE = 25
     UPLOAD_FOLDER = os.path.join(basedir, "app/static/images")
-    
-    
+    MAX_EMOJI_SIZE = 367000
     MAIL_SERVER = "smtp.googlemail.com"
     MAIL_PORT = 587
     MAIL_USE_TLS = 1

@@ -1,7 +1,7 @@
-<label id="reactions">
+<label class="post_reactions">
     {% for reaction in reactions %}
-    {% set filepath = 'images/' ~ reaction.emoji.icon_path ~ '' %}
-    <img src="{{ url_for('static', filename=filepath) }}">
-    {{ reaction.emoji.name }} {{ reaction.user.username }}<br>
+    <div class="reaction_box" name="{{ reaction.emoji.name }}" reacter="{{ reaction.user.username }}">
+        <img class="reaction" src="{{ url_for('static', filename=reaction.emoji.small_path) }}">
+    </div>
     {% endfor %}
 </label>
