@@ -37,16 +37,15 @@ def parse(s):
     # the FormatTag class keeps track of information for each tag type, while variables within this function
     # are responsible for keeping track of inter-tag information and adjusting the tag values based on what happens
     # as the string is parsed
-
-    replace = {
-        u'<': u'&lt;',
-        u'>': u'&gt;',
-        u'&': u'&amp;',
-        u'\n': u'<br/>'
-    }
-
-    for key in replace.keys():
-        s = s.replace(key, replace[key])
+    replace = [
+        (u'&', u'&amp;'),
+        (u'<', u'&lt;'),
+        (u'>', u'&gt;'),
+        (u'\n', u'<br/>')
+    ]
+    
+    for r in replace:
+        s = s.replace(r[0], r[1])
 
     tags = create_tags()
     open_bracket_pos = None

@@ -1,5 +1,4 @@
 from datetime import datetime
-from hashlib import md5
 from time import time
 from operator import itemgetter
 from flask import current_app
@@ -23,7 +22,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(140), index=True, unique=True)
     password_hash = db.Column(db.String(140))
-    mod_level = db.Column(db.Integer, index=True)
+    mod_level = db.Column(db.Integer, index=True, default=1)
     posts = db.relationship('Post', backref='author', lazy='dynamic')
     threads = db.relationship('Thread', backref='author', lazy='dynamic')
     categories = db.relationship('Category', backref='author', lazy='dynamic')

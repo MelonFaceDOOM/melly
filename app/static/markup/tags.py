@@ -61,5 +61,16 @@ tags = [
         "end":  "[/quote]",
         "output_template": "",
         "format_func": format_quote
+    },
+    
+    {
+        "name": "spoiler",
+        "start": "\[spoiler\]",
+        "end": "[/spoiler]",
+        "output_template": """<button class="collapsible">Spoiler</button>
+<div class="content">
+  <p>{value}</p>
+</div>""",
+        "format_func": simple_replace
     }
 ]

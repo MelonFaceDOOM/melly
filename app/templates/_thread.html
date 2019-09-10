@@ -13,12 +13,17 @@
                 </div>
                 {% endif %}
             </th>
-            <th class="small-avatar">
-                <a href="{{ url_for('main.user', username=thread.author.username) }}">
-                    {% if thread.author.avatar %}
-                    <img src="{{ thread.author.avatar(18) }}" />
-                    {% endif %}
-                </a>
+            <th class="author-and-avatar">
+                <div class="small-avatar">
+                    <a href="{{ url_for('main.user', username=thread.author.username) }}">
+                        {% if thread.author.avatar_path %}
+                        <img src="{{ url_for('static', filename=thread.author.avatar_path) }}"/>
+                        {% endif %}
+                    </a>
+                </div>
+                <div>
+                      {{ thread.author.username }}
+                </div>
             </th>
             <th class="thread_author">
                 <a href="{{ url_for('main.user', username=thread.author.username) }}">

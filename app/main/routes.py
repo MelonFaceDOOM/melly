@@ -310,10 +310,11 @@ def edit_post(post_id):
         flash('post {} not found.'.format(post_id))
         return redirect(url_for('main.index'))
 
-    if post.author.username is not current_user.username:
+    if post.author.username is not current_user.username and current_user.mod_level < 2:
         flash('You are not the author of post {}.'.format(post_id))
+        last_page_viewed, last_post_id = current_user.get_user_thread_position(thread=post.thread)
         return redirect(url_for('main.thread', thread_id=post.thread.id,
-                                page=current_user.last_page_viewed(post.thread.id)))
+                                page=last_page_viewed))
     # TODO: add cancel button to PostForm
     form = PostForm()
     if form.validate_on_submit():
@@ -340,8 +341,9 @@ def delete_post(post_id):
 
     if post.author.username is not current_user.username:
         flash('You are not the author of post {}.'.format(post_id))
+        last_page_viewed, last_post_id = current_user.get_user_thread_position(thread=post.thread)
         return redirect(url_for('main.thread', thread_id=post.thread.id,
-                                page=current_user.last_page_viewed(post.thread.id)))
+                                page=last_page_viewed))
 
     # info for redirect
     thread_id = post.thread.id

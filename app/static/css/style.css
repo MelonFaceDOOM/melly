@@ -1,28 +1,99 @@
 html {
-    --hue: 30;
+      --hue: 5;
+      --hue2: 26;
 
-  --text-color-normal: hsl(var(--hue), 0%, 62%);
-  --text-color-light: hsl(var(--hue), 0%, 35%);
-  --text-color-body: hsl(var(--hue), 0%, 90%);
-  --text-color-highlight: hsl(var(--accent-hue), 0%, 45%);
-  --link-color: hsl(var(--hue), 0%, 90%);
-  --link-hover-color: hsl(var(--hue), 0%, 70%);
-  --link-visited-color: hsl(var(--hue), 0%, 85%);
-  --title-color: hsl(var(--hue), 0%, 65%);
-  --accent-color: hsl(var(--accent-hue), 0%, 70%);
-  --error-color: rgb(240, 50, 50);
-  --button-background: hsl(var(--hue), 0%, 43%);
-  --button-text-color: black;
-  --background: hsl(var(--hue), 0%, 10%);
-  --background-hover: hsl(var(--hue), 0%, 20%);
-  --table-header-background: hsl(0, 100%, 21%);
-  --table-background: hsl(var(--hue), 0%, 20%);
-  --table-border: hsl(var(--hue), 0%, 10%);
-  --category-title: hsl(var(--hue), 0%, 15%);
-  --category-title-background: hsl(var(--hue), 0%, 5%);
+      --navbar-background: hsl(var(--hue), 100%, 34.3%);
+      --navbar-outline: hsl(var(--hue), 100%, 22%);
+      --navbar-hover: hsl(var(--hue2), 100%, 57%);
+      --text-color-normal: hsl(var(--hue), 0%, 90%);
+      --text-color-light: hsl(var(--hue), 0%, 35%);
+      --text-color-body: hsl(var(--hue), 0%, 90%);
+      --text-color-highlight: hsl(var(--accent-hue), 0%, 45%);
+      --link-color: hsl(var(--hue), 0%, 90%);
+      --link-hover-color: hsl(var(--hue), 0%, 70%);
+      --link-visited-color: hsl(var(--hue), 0%, 85%);
+      --title-color: hsl(var(--hue), 0%, 65%);
+      --accent-color: hsl(var(--accent-hue), 0%, 70%);
+      --error-color: rgb(240, 50, 50);
+      --button-background: hsl(var(--hue), 0%, 43%);
+      --button-text-color: black;
+      --background: hsl(var(--hue), 0%, 10%);
+      --background-hover: hsl(var(--hue), 0%, 20%);
+      --table-header-background: hsl(0, 100%, 21%);
+      --table-background: hsl(var(--hue), 0%, 20%);
+      --table-border: hsl(var(--hue), 0%, 10%);
+      --category-title: hsl(var(--hue), 0%, 15%);
+      --category-title-background: hsl(var(--hue), 0%, 5%);
 }
 
+/* Navbar styling */
+/* -------------------------------------------------------------------- */
+.navbar-default {
+	background-color: var(--navbar-background);
+	border-color: var(--navbar-outline);
+}
+.navbar-default .navbar-brand {
+	color: var(--text-color-normal);
+	font-weight: 500;
+}
+.navbar-default .navbar-brand:hover, .navbar-default .navbar-brand:focus {
+	color: var(--navbar-hover);
+}
+.navbar-default .navbar-text {
+	color: var(--text-color-normal);
+}
+.navbar-default .navbar-nav > li > a {
+	color: var(--text-color-normal);
+	font-weight: 500;
+}
+.navbar-default .navbar-nav > li > a:hover, .navbar-default .navbar-nav > li > a:focus {
+    color: var(--navbar-hover);
+}
+.navbar-default .navbar-nav > li > .dropdown-menu {
+    background-color: var(--navbar-background);
+}
+.navbar-default .navbar-nav > li > .dropdown-menu > li > a {
+    color: var(--text-color-normal);
+}
+.navbar-default .navbar-nav > li > .dropdown-menu > li > a:hover,
+.navbar-default .navbar-nav > li > .dropdown-menu > li > a:focus {
+    color: var(--navbar-hover);
+    background-color: var(--navbar-outline);
+}
+.navbar-default .navbar-nav > li > .dropdown-menu > li > .divider {
+    background-color: var(--navbar-background);
+}
+.navbar-default .navbar-nav > .active > a, .navbar-default .navbar-nav > .active > a:hover, .navbar-default .navbar-nav > .active > a:focus {
+    color: var(--navbar-hover);
+    background-color: var(--navbar-outline);
+}
+.navbar-default .navbar-nav > .open > a, .navbar-default .navbar-nav > .open > a:hover, .navbar-default .navbar-nav > .open > a:focus {
+    color: var(--navbar-hover);
+    background-color: var(--navbar-outline);
+}
+.navbar-default .navbar-toggle {
+    border-color: var(--navbar-outline);
+}
+.navbar-default .navbar-toggle:hover, .navbar-default .navbar-toggle:focus {
+    background-color: var(--navbar-outline);
+}
+.navbar-default .navbar-toggle .icon-bar {
+    background-color: var(--text-color-normal);
+}
+.navbar-default .navbar-collapse,
+    .navbar-default .navbar-form {
+    border-color: var(--text-color-normal);
+}
+.navbar-default .navbar-link {
+    color: var(--text-color-normal);
+}
+.navbar-default .navbar-link:hover {
+    color: var(--navbar-hover);
+}
+/* -------------------------------------------------------------------- */
 
+/* General styling*/
+/* -------------------------------------------------------------------- */
 body {
     margin: 0;
     font-family: "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
@@ -32,11 +103,6 @@ body {
     color: var(--text-color-normal);
     text-align: left;
     background-color: var(--background);
-}
-
-.container {
-    min-width: 800px;
-    max-width: 65%;
 }
 
 a:link {
@@ -50,8 +116,72 @@ a:hover {
 a:visited {
     color: var(--link-visited-color);
 }
+/* -------------------------------------------------------------------- */
+
+/* Category/thread boxes */
+/* -------------------------------------------------------------------- */
+.container {
+    min-width: 800px;
+    max-width: 65%;
+}
 
 
+.table-header{
+    color: var(--title-color);
+    background-color: transparent;
+}
+
+tr.table-row {
+    background-color: transparent;
+    height: 85px;
+}
+
+tr.table-header:hover th{
+    background-color: var(--navbar-background);
+}
+
+tr.table-row:hover th{
+    background-color: var(--background-hover);
+}
+
+.thread-title {
+    color: var(--title-color);
+    font-family: "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.0;
+}
+
+.category-container {
+    min-width: 600px;
+    max-width: 80%;
+    margin: auto;
+}
+
+.edit-button {
+    font-size: 1.3rem;
+    font-weight: 300;
+}
+
+.small_avatar{
+    color: var(--text-color-body);
+    border-radius: 0px;
+    padding: 0px;
+    height: 35px;
+    width: 35px;
+    float: left;
+}
+
+
+th.thread_author {
+    word-wrap: break-word;
+    font-size: 1.3rem;
+}
+/* -------------------------------------------------------------------- */
+
+
+/*Forum post box and sub-elements*/
+/* -------------------------------------------------------------------- */
 div.forum_post_container {
     display: flex;
     width: 100%;
@@ -106,7 +236,10 @@ post_footer_buttons {
     padding: 5px;
     float: right
 }
+/* -------------------------------------------------------------------- */
 
+/* Quote/Edit/Delete buttons */
+/* -------------------------------------------------------------------- */
 .btn-outline-danger{color:#dc3545;background-color:transparent;background-image:none;border-color:#dc3545}
 .btn-outline-danger:hover{color:#fff;background-color:#dc3545;border-color:#dc3545}
 
@@ -115,56 +248,8 @@ post_footer_buttons {
 
 .btn-outline-primary{color:#6c757d;background-color:transparent;background-image:none;border-color:#6c757d}
 .btn-outline-primary:hover{color:#fff;background-color:#6c757d;border-color:#6c757d}
+/* -------------------------------------------------------------------- */
 
-.category-title {
-    color: var(--title-color);
-    font-family: "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-    font-size: 3.0rem;
-    font-weight: 750;
-    line-height: 1.5;
-}
-
-
-.table-header{
-    color: var(--title-color);
-    background-color: var(--table-header-background);
-}
-
-tr.table-row {
-    background-color: var(--table-background);
-    height: 85px;
-}
-
-
-tr.table-header:hover th{
-    background-color: var(--table-header-background);
-}
-
-tr.table-row:hover th{
-    background-color: var(--background-hover);
-}
-
-.thread-title {
-    color: var(--title-color);
-    font-family: "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-    font-size: 2.0rem;
-    font-weight: 600;
-    line-height: 1.0;
-}
-
-.edit-button {
-    font-size: 1.3rem;
-    font-weight: 300;
-}
-
-th.small_avatar{
-    text-align: right;
-}
-
-
-th.thread_author {
-    word-wrap: break-word;
-}
 
 .post_reactions {
     max-width:100%
@@ -221,4 +306,27 @@ div.clear {
 
 .col-md-4 {
     width: 100%;
+}
+
+.collapsible {
+  background-color: #777;
+  color: white;
+  cursor: pointer;
+  padding: 18px;
+  width: 100%;
+  border: none;
+  text-align: left;
+  outline: none;
+  font-size: 15px;
+}
+
+.active, .collapsible:hover {
+  background-color: #555;
+}
+
+.content {
+  padding: 0 18px;
+  display: none;
+  overflow: hidden;
+  background-color: #f1f1f1;
 }

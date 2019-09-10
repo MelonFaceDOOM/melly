@@ -55,5 +55,25 @@ tags = [
         "end":  "[/quote]",
         "output_template": "",
         "format_func": format_quote
+    },
+    
+    {
+        "name": "spoiler",
+        "start": "\[spoiler\]",
+        "end": "[/spoiler]",
+        "output_template": """<div class="panel-group">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h4 class="panel-title">
+        <a data-toggle="collapse" href="#collapse1">Collapsible panel</a>
+      </h4>
+    </div>
+    <div id="collapse1" class="panel-collapse collapse">
+      <div class="panel-body">Panel Body</div>
+    </div>
+  </div>
+</div>""",
+        "format_func": simple_replace
     }
 ]
+
