@@ -1,9 +1,9 @@
     <h2 class="category-title">
         <a href="{{ url_for('main.category', category_id=category.id) }}">
-            {{ category.title }}
+
         </a>
     </h2>
-    <table class="table table-hover" style="table-layout:fixed">
+    <table class="table" style="table-layout:fixed">
         <colgroup>
             <col span="1" style="width: 52%;">
             <col span="1" style="width: 3%;">
@@ -12,7 +12,9 @@
             <col span="1" style="width: 20%;">
 
         <tr class="table-header">
-            <th>Thread</th>
+            <th>
+                <a href="{{ url_for('main.category', category_id=category.id) }}">{{ category.title }}</a>
+            </th>
             <th></th>
             <th>Author</th>
             <th>Post Count</th>

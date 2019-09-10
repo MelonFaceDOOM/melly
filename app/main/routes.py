@@ -178,6 +178,7 @@ def thread(thread_id):
         return redirect(url_for('main.index'))
 
     form = PostForm()
+    print(form.csrf_token)
     if form.validate_on_submit():
         post = Post(body=form.post.data, author=current_user, thread=thread)
         if not post.is_duplicate():
@@ -469,9 +470,10 @@ def emojis():
             # the first is needed for file-saving. The second is needed for rendering on the webpage
             rel_path = os.path.relpath(filepath, os.getcwd())
             rel_static_path = os.path.relpath(filepath, os.path.join(os.getcwd(), "app", "static"))
-            rel_path = rel_path.replace("\\", "/")
             rel_static_path = rel_static_path.replace("\\", "/")
-            resize_image(rel_path)
+
+            # don't think resizing this is necessary. instead just depend on the MAX_EMOJI_SIZE variable
+            # resize_image(rel_path)
 
             # create unique emoji name
             # this has fewer retries because it involves a database query and will only ever even require a
@@ -509,6 +511,20 @@ def delete_emoji(emoji_id):
         db.session.commit()
     return redirect(url_for('main.emojis'))
 
+
+@bp.route('/rename_emoji', methods=["POST"])
+@login_required
+def rename_emoji():
+    emoji_id = request.form['emoji_id']
+    new_name = request.form['new_name']
+    emoji = Emoji.query.filter_by(id=emoji_id).first()
+    if emoji:
+        emoji.name = new_name
+        db.session.commit()
+    return "", 204
+
+
+# TODO: does this really need both get and post?
 @bp.route('/reactions', methods=['GET', 'POST'])
 @login_required
 def reactions():

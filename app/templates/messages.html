@@ -2,8 +2,38 @@
 
 {% block app_content %}
     <h1>{{ 'Messages' }}</h1>
-    {% for post in messages.items %}
-        {% include '_post.html' %}
+    {% for message in messages.items %}
+        <div class="forum_post_container">
+            <div class="post_author_info">
+                <span class="post_author_name">
+                    {% set user_link %}
+                    <a href="{{ url_for('main.user', username=message.author.username) }}">
+                        {{ message.author.username }}
+                    </a>
+                    {% endset %}
+                    {{ user_link }}
+                </span>
+            <br>
+            <span class="post_author_avatar">
+                <a href="{{ url_for('main.user', username=message.author.username) }}">
+                    {% if message.author.avatar_path %}
+                    <img src="{{ url_for('static', filename=message.author.avatar_path) }}"/>
+                    {% endif %}
+                </a>
+            </span>
+            </div>
+            <div class="post_content">
+                <div class="post_info">
+                {{ moment(message.timestamp).format('MMMM Do YYYY, h:mm:ss a') }}
+                </div>
+                <div class="message_content">
+                    <div style="word-wrap: break-word" class="message_body">
+                        <span>{{ message.body |safe }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br>
     {% endfor %}
     <nav aria-label="...">
         <ul class="pager">

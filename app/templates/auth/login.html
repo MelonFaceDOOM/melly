@@ -2,16 +2,26 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-    <h1>Sign In</h1>
-    <div class="row">
-        <div class="col-md-4">
-            {{ wtf.quick_form(form) }}
+    <div class="login-box">
+        <h1>Sign In</h1>
+        <div class="row">
+            <div class="col-md-4">
+                {{ wtf.quick_form(form) }}
+            </div>
         </div>
+        <br>
+        <p>New User? <a href="{{ url_for('auth.register') }}">Click to Register!</a></p>
+        <p>
+            Forgot Your Password?
+            <a href="{{ url_for('auth.reset_password_request') }}">Click to Reset It</a>
+        </p>
     </div>
-    <br>
-    <p>New User? <a href="{{ url_for('auth.register') }}">Click to Register!</a></p>
-    <p>
-        Forgot Your Password?
-        <a href="{{ url_for('auth.reset_password_request') }}">Click to Reset It</a>
-    </p>
+
+    <div class="about-forum">
+        <h1>About Department of Dragons</h1>
+        Department of Dragons is a fantasy role-playing discussion forum for recovering and current alcoholics to
+        explore their feelings in a safe space through Dungeons and Dragons
+    </div>
+
+    <div class="clear"></div>
 {% endblock %}

@@ -15,7 +15,7 @@ html {
   --button-text-color: black;
   --background: hsl(var(--hue), 0%, 10%);
   --background-hover: hsl(var(--hue), 0%, 20%);
-  --table-title-background: hsl(var(--hue), 0%, 15%);
+  --table-header-background: hsl(0, 100%, 21%);
   --table-background: hsl(var(--hue), 0%, 20%);
   --table-border: hsl(var(--hue), 0%, 10%);
   --category-title: hsl(var(--hue), 0%, 15%);
@@ -124,9 +124,10 @@ post_footer_buttons {
     line-height: 1.5;
 }
 
-tr.table-header{
-    background-color: var(--table-title-background);
+
+.table-header{
     color: var(--title-color);
+    background-color: var(--table-header-background);
 }
 
 tr.table-row {
@@ -134,8 +135,9 @@ tr.table-row {
     height: 85px;
 }
 
+
 tr.table-header:hover th{
-    background-color: var(--background-hover);
+    background-color: var(--table-header-background);
 }
 
 tr.table-row:hover th{
@@ -202,3 +204,21 @@ a.delete_emoji {
     vertical-align: center;
 }
 
+
+div.login-box {
+    float: left;
+}
+
+div.about-forum {
+    max-width: 600px;
+    float: left;
+    padding-left: 100px;
+}
+
+div.clear {
+ clear: both;
+}
+
+.col-md-4 {
+    width: 100%;
+}

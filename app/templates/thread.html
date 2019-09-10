@@ -10,11 +10,29 @@
     {% for post in posts.items %}
         {% include '_post.html' %}
     {% endfor %}
+
     {% if form %}
-    {{ wtf.quick_form(form) }}
+    <form action="" method="post" class="form" role="form">
+        {{ form.csrf_token }}
+        <div class="form-group required">
+            {{ form.post.label(class_="control-label") }}
+            <div class="post-form-buttons" align="right">
+                <button type="button" id="bold-tag" class="btn btn-info">
+                    B
+                </button>
+                <button type="button" id="italics-tag" class="btn btn-info">
+                    I
+                </button>
+                <button type="button" id="quote-tag" class="btn btn-info">
+                    Q
+                </button>
+            </div>
+            {{ form.post(class_="form-control") }}
+        </div>
+        {{ form.submit(class_="btn btn-default") }}
+    </form>
     {% endif %}
 
-    
     <nav aria-label="...">
         <ul class="pager">
             <li class="justified{% if not prev_url %} disabled{% endif %}">
@@ -49,5 +67,5 @@
     {{ super() }}
     <script src="{{ url_for('static', filename='js/react_menu.js') }}"></script>
     <script src="{{ url_for('static', filename='js/emoji_react.js') }}"></script>
-
+    <script src="{{ url_for('static', filename='js/melon-markup.js') }}"></script>
 {% endblock %}

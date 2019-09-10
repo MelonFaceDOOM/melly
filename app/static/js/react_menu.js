@@ -25,16 +25,16 @@ $('.emojiSearch').keyup(function(e) {
     clearTimeout($.data(this, 'timer'));
     var post_id = $(this).attr('post_id');
     if (e.keyCode == 13)
-      search(true, post_id);
+      search(post_id);
     else
-      $(this).data('timer', setTimeout(search.bind(null, true, post_id), 250));
+      $(this).data('timer', setTimeout(search.bind(null, post_id), 250));
 });
 
-function search(force, post_id) {
+function search(post_id) {
     var existingString = $('.emojiSearch[post_id="' + post_id + '"]').val();
     if (existingString.length < 1) {
         change_page(post_id);
-        return; //wasn't enter, not > 2 char
+        return;
     }
     var reaction_menu = $.ajax({
         url : "/search_emojis?search_string=" + existingString + "&post_id=" + post_id,

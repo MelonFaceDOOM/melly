@@ -338,7 +338,7 @@ def resize_image(filepath, max_dimension=128, save_path=None):
     if save_path is None:
         save_path = filepath
 
-    if img.size[0] > max_dimension and img.size[0] > img.size[1]:
+    if img.size[0] > max_dimension and (img.size[0] >= img.size[1]):
         percent = (max_dimension / float(img.size[0]))
         height = int((float(img.size[1]) * float(percent)))
         img = img.resize((max_dimension, height), Image.ANTIALIAS)
@@ -347,29 +347,38 @@ def resize_image(filepath, max_dimension=128, save_path=None):
         percent = (max_dimension / float(img.size[1]))
         width = int((float(img.size[0]) * float(percent)))
         img = img.resize((width, max_dimension), Image.ANTIALIAS)
-    print(save_path)
+
     img.save(save_path)
     return save_path
 
 
 @listens_for(Emoji, 'before_insert')
 def emoji_defaults(mapper, configuration, target):
-
+    """upon adding an emoji, automatically resize to 80x80 and store a second file"""
     source_path = os.path.join("app", "static", target.file_path)
-    retries = 0
-    while True:
-        pattern = r"(.+)[.](.+?$)"
-        match = re.match(pattern, source_path)
-        if match is None:
-            return None
-        save_path = match.groups()[0] + "_s." + match.groups()[1]
-        if not os.path.exists(save_path) or retries > 20:
-            break
-        retries += 1
-    else:
+    pattern = r"(.+)[.](.+?$)"
+    match = re.match(pattern, source_path)
+    if match is None:
+        target.small_path = "filepath not recognized"
         return None
 
-    print(save_path)
+    path_and_name = match.groups()[0]
+    extension = match.groups()[1]
+
+    # don't bother resizing gif at the moment, since by default only one frame is resized and the animation is lost
+    # TODO: implement a way to resize gifs and replace this code
+    if extension == "gif":
+        target.small_path = target.file_path
+        return None
+
+    # find an _s name that isn't already taken
+    i = 0
+    while True:
+        save_path = path_and_name + "_s" + (str(i) if i>0 else "") + "." + extension
+        if not os.path.exists(save_path):
+            break
+        i += 1
+
     save_path = resize_image(source_path, max_dimension=80, save_path=save_path)
     save_path = os.path.relpath(save_path, os.path.join(os.getcwd(), "app", "static"))
     target.small_path = save_path.replace("\\", "/")
