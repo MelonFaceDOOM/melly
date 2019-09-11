@@ -1,5 +1,5 @@
 from PIL import Image
-from numpy.random import randint
+from random import randint
 import os
 
 def random_avatar():

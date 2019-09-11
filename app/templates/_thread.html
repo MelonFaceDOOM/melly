@@ -1,9 +1,17 @@
         <tr class="table-row">
-            <th class="thread-title">
-                <div class="thread-title">
-                    <a href="{{ url_for('main.thread', thread_id=thread.id) }}">
-                        {{ thread.title }}
-                    </a>
+            <th class="thread-box">
+                <div class="thread-title-and-icons">
+                    {% for thread_info_icon in thread.info_icons(current_user) %}
+                    <div class="info_icon_box">
+                        <img class="info_icon" src="{{ url_for('static', filename=thread_info_icon) }}">
+                    </div>
+                    {% endfor %}
+                    <div class="thread-title">
+                        <a href="{{ url_for('main.thread', thread_id=thread.id) }}">
+                            {{ thread.title }}
+                        </a>
+                    </div>
+                    <div class="clear"></div>
                 </div>
                 {% if thread.author == current_user %}
                 <div class="edit-button">
@@ -17,36 +25,35 @@
                 <div class="small-avatar">
                     <a href="{{ url_for('main.user', username=thread.author.username) }}">
                         {% if thread.author.avatar_path %}
-                        <img src="{{ url_for('static', filename=thread.author.avatar_path) }}"/>
+                        <img class="small-avatar" src="{{ url_for('static', filename=thread.author.avatar_path) }}"/>
                         {% endif %}
                     </a>
                 </div>
-                <div>
-                      {{ thread.author.username }}
+                <div class="category-author">
+                    <a href="{{ url_for('main.user', username=thread.author.username) }}">
+                        {{ thread.author.username }}
+                    </a>
                 </div>
-            </th>
-            <th class="thread_author">
-                <a href="{{ url_for('main.user', username=thread.author.username) }}">
-                    {{ thread.author.username }}
-                </a>
+                <div class="clear"></div>
             </th>
             <th>
                 {{ thread.post_count() }}
             </th>
             <th>
-                {% set last_post = thread.last_post() %}
-                {% if last_post %}
-                    
-                    by
-                    <a href="{{ url_for('main.user', username=last_post.author.username) }}">
-                        {{ last_post.author.username -}}
-                    </a>,
-                    <a href="{{ url_for('main.thread', thread_id=thread.id) }}">
-                        {{ moment(last_post.timestamp).format('MMMM Do YYYY, h:mm:ss a') }}
-                    </a>
-                {% else %}
-                    N/A
-                {% endif %} 
-                
+                <div class="last-post-info">
+                    {% set last_post = thread.last_post() %}
+                    {% if last_post %}
+
+                        by
+                        <a href="{{ url_for('main.user', username=last_post.author.username) }}">
+                            {{ last_post.author.username -}}
+                        </a>,
+                        <a href="{{ url_for('main.thread', thread_id=thread.id) }}">
+                            {{ moment(last_post.timestamp).format('MMMM Do YYYY, h:mm:ss a') }}
+                        </a>
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </div>
             </th>
         </tr>

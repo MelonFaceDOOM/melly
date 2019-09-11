@@ -144,12 +144,28 @@ tr.table-row:hover th{
     background-color: var(--background-hover);
 }
 
+.info_icon_box {
+    height: 35px;
+    width: 35px;
+    float: left;
+}
+
+.info_icon {
+    max-width: 100%;
+}
+
+.thread-title-and-icons {
+    padding: 0px;
+}
+
 .thread-title {
     color: var(--title-color);
     font-family: "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-    font-size: 1.5rem;
+    font-size: 1.7rem;
     font-weight: 600;
-    line-height: 1.0;
+    line-height: 2.0;
+    float: left;
+    padding-left: 10px;
 }
 
 .category-container {
@@ -163,20 +179,30 @@ tr.table-row:hover th{
     font-weight: 300;
 }
 
-.small_avatar{
-    color: var(--text-color-body);
-    border-radius: 0px;
-    padding: 0px;
+.category-author {
+    color: var(--title-color);
+    font-family: "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 2.0;
+    float: left;
+    padding-left: 10px;
+}
+
+.small-avatar{
     height: 35px;
     width: 35px;
     float: left;
 }
 
-
-th.thread_author {
-    word-wrap: break-word;
-    font-size: 1.3rem;
+.last-post-info {
+    color: var(--title-color);
+    font-family: "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-size: 1.5rem;
+    font-weight: 500;
+    line-height: 1.0;
 }
+
 /* -------------------------------------------------------------------- */
 
 

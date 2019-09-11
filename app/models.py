@@ -15,6 +15,7 @@ from app.static.markup import melon_markup
 from sqlalchemy.event import listens_for
 from PIL import Image
 from app.static.avatars.random_avatar import random_avatar
+from app.static.images.donuts.random_donut import random_donut
 
 
 class User(UserMixin, db.Model):
@@ -251,6 +252,22 @@ class Thread(db.Model):
     def last_page(self):
         last_page = int((self.posts.count() - 1) / current_app.config['POSTS_PER_PAGE'] + 1)
         return last_page
+
+    def info_icons(self, user):
+        info_icons = []
+
+        # return dount if there is an unread post for the user
+        page_num, user_last_viewed_post_id = user.get_user_thread_position(self)
+        newest_post = self.last_post()
+        if not user_last_viewed_post_id:
+            donut = random_donut()
+            info_icons.append(donut)
+        elif newest_post and user_last_viewed_post_id:
+            if newest_post.id > user_last_viewed_post_id:
+                donut = random_donut()
+                info_icons.append(donut)
+
+        return info_icons
 
 
 class Category(db.Model):
