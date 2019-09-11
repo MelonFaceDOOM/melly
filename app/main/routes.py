@@ -9,7 +9,7 @@ import os
 import re
 from sqlalchemy import func
 from werkzeug.utils import secure_filename
-from app.models import resize_image
+from sqlalchemy.exc import IntegrityError
 
 
 @bp.before_app_request
@@ -178,7 +178,6 @@ def thread(thread_id):
         return redirect(url_for('main.index'))
 
     form = PostForm()
-    print(form.csrf_token)
     if form.validate_on_submit():
         post = Post(body=form.post.data, author=current_user, thread=thread)
         if not post.is_duplicate():
@@ -442,7 +441,7 @@ def emojis():
         images = request.files.getlist("images")
         for image in images:
 
-            if len(Emoji.query.all()) > 300:
+            if len(Emoji.query.all()) > current_app.config['MAX_NUMBER_OF_EMOJIS']:
                 return "Max emoji limit reached", 400
 
             filename = secure_filename(image.filename)
@@ -474,29 +473,27 @@ def emojis():
             rel_static_path = os.path.relpath(filepath, os.path.join(os.getcwd(), "app", "static"))
             rel_static_path = rel_static_path.replace("\\", "/")
 
-            # don't think resizing this is necessary. instead just depend on the MAX_EMOJI_SIZE variable
-            # resize_image(rel_path)
+            # find a first name to based on id
+            try:
+                total_emojis = len(Emoji.query.all())
+            except:
+                total_emojis = 0
+            if total_emojis > 0:
+                emoji_id = db.session.query(func.max(Emoji.id)).first()[0] + 1
+            else:
+                emoji_id = 1
 
-            # create unique emoji name
-            # this has fewer retries because it involves a database query and will only ever even require a
-            # retry if someone else uploads an emoji at the exact same moment
             retries = 0
-            while retries < 10:
-                try:
-                    total_emojis = len(Emoji.query.all())
-                except:
-                    total_emojis = 0
-                if total_emojis > 0:
-                    emoji_id = db.session.query(func.max(Emoji.id)).first()[0] + 1
-                else:
-                    emoji_id = 1
+            while retries < current_app.config['MAX_NUMBER_OF_EMOJIS']:
                 emoji_name = "emoji_" + str(emoji_id)
                 emoji = Emoji(name=emoji_name, file_path=rel_static_path)
                 try:
                     db.session.add(emoji)
                     db.session.commit()
                     break
-                except:
+                except IntegrityError:
+                    db.session.rollback() #  db.session will remain broken after a failed commit() unless this is called
+                    emoji_id += 1
                     retries += 1
         return redirect(url_for("main.emojis"))
 

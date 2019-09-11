@@ -19,6 +19,7 @@ function reaction_menu_page(post_id, page=1) {
 function change_page(post_id, page=1){
     var reaction_menu = reaction_menu_page(post_id=post_id, page=page);
     $('.reaction_menu[post_id="' + post_id + '"]').parent().html(reaction_menu);
+    $('.emojiSearch[post_id="' + post_id + '"]').focus();
 }
 
 $('.emojiSearch').keyup(function(e) {

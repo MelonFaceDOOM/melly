@@ -9,7 +9,7 @@
 
     <form name="uploadEmoji" method="POST" enctype="multipart/form-data" action="/emojis" onsubmit="return validate({{ max_emoji_size }})">
       <input type="file" id="images" name="images" multiple="">
-      <input type="submit" value="add">
+      <input class="submit" type="submit" value="add">
     </form>
 
 
@@ -18,13 +18,17 @@
     <br>
     {% for emoji in emojis %}
     <div class="emoji-row">
-        <div class="reaction_box" name="{{ emoji.name }}">
+        <div class="reaction_box" id="{{ emoji.name }}">
             <img class="reaction" src="{{ url_for('static', filename=emoji.file_path) }}">
         </div>
-        <input type="text" class="emoji-name-field" emoji_id="{{ emoji.id }}" name="emoji_name" value="{{ emoji.name }}">
-        <a class="delete_emoji" href="{{ url_for('main.delete_emoji', emoji_id=emoji.id) }}">
-            x
-        </a>
+        <div class="emoji-name-box">
+            <input type="text" class="emoji-name-field" emoji_id="{{ emoji.id }}" name="emoji_name" value="{{ emoji.name }}">
+        </div>
+        <span class="delete_emoji">
+            <a href="{{ url_for('main.delete_emoji', emoji_id=emoji.id) }}">
+                x
+            </a>
+        </span>
     </div>
     <br>
     {% endfor %}

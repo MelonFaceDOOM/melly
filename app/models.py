@@ -333,7 +333,7 @@ class PostReaction(db.Model):
 class Emoji(db.Model):
     # stores reaction images
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(140))
+    name = db.Column(db.String(140), unique=True)
     file_path = db.Column(db.String(140))
     small_path = db.Column(db.String(140))
     posts = db.relationship('PostReaction', backref='emoji', lazy='dynamic')
@@ -390,12 +390,12 @@ def emoji_defaults(mapper, configuration, target):
     # find an _s name that isn't already taken
     i = 0
     while True:
-        save_path = path_and_name + "_s" + (str(i) if i>0 else "") + "." + extension
+        save_path = path_and_name + "_s" + (str(i) if i > 0 else "") + "." + extension
         if not os.path.exists(save_path):
             break
         i += 1
 
-    save_path = resize_image(source_path, max_dimension=80, save_path=save_path)
+    save_path = resize_image(source_path, max_dimension=35, save_path=save_path)
     save_path = os.path.relpath(save_path, os.path.join(os.getcwd(), "app", "static"))
     target.small_path = save_path.replace("\\", "/")
 

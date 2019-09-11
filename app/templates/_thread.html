@@ -6,20 +6,13 @@
                         <img class="info_icon" src="{{ url_for('static', filename=thread_info_icon) }}">
                     </div>
                     {% endfor %}
-                    <div class="thread-title">
+                    <div class="thread-text-cell  thread-title">
                         <a href="{{ url_for('main.thread', thread_id=thread.id) }}">
                             {{ thread.title }}
                         </a>
                     </div>
                     <div class="clear"></div>
                 </div>
-                {% if thread.author == current_user %}
-                <div class="edit-button">
-                    <a href="{{ url_for('main.edit_thread', thread_id=thread.id) }}">
-                        (Edit)
-                    </a>
-                </div>
-                {% endif %}
             </th>
             <th class="author-and-avatar">
                 <div class="small-avatar">
@@ -29,7 +22,7 @@
                         {% endif %}
                     </a>
                 </div>
-                <div class="category-author">
+                <div class="thread-text-cell category-author">
                     <a href="{{ url_for('main.user', username=thread.author.username) }}">
                         {{ thread.author.username }}
                     </a>
@@ -40,17 +33,16 @@
                 {{ thread.post_count() }}
             </th>
             <th>
-                <div class="last-post-info">
+                <div class="thread-text-cell last-post-info">
                     {% set last_post = thread.last_post() %}
                     {% if last_post %}
-
-                        by
-                        <a href="{{ url_for('main.user', username=last_post.author.username) }}">
-                            {{ last_post.author.username -}}
-                        </a>,
-                        <a href="{{ url_for('main.thread', thread_id=thread.id) }}">
-                            {{ moment(last_post.timestamp).format('MMMM Do YYYY, h:mm:ss a') }}
-                        </a>
+                    <a href="{{ url_for('main.thread', thread_id=thread.id) }}">
+                        {{ moment(last_post.timestamp).format('MMMM Do YYYY, h:mm:ss a') }}
+                    </a>
+                     --
+                    <a href="{{ url_for('main.user', username=last_post.author.username) }}">
+                        {{ last_post.author.username -}}
+                    </a>
                     {% else %}
                         N/A
                     {% endif %}

@@ -10,7 +10,9 @@
                     {% endif %}
             </td>
             <td>
-                <h1>User: {{ user.username }}</h1>
+                <div class="profile-username">
+                    <h1>{{ user.username }}</h1>
+                </div>
                 {% if user.about_me %}<p>{{ user.about_me }}</p>{% endif %}
                 
                 {% if user.last_seen %}
@@ -33,7 +35,7 @@
     {% for post in posts %}
     <div class="post_info">
         <a href="{{ url_for('main.thread', thread_id=post.thread.id) }}">
-            Posted in {{ post.thread.title }}
+            {{ post.thread.title }}
         </a>
     </div>
     {% include '_post.html' %}

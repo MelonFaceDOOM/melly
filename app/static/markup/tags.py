@@ -26,6 +26,22 @@ def simple_replace(tag, string):
     value = string[len(start_tag):end_tag_pos]
     formatted = tag.output_template.format(value=value)
     return formatted
+    
+def embed_youtube(tag, string):
+    start_tag = re.match(tag.start, string).group()
+    end_tag_pos = string.find(tag.end)
+    youtube_string = string[len(start_tag):end_tag_pos]
+    
+    pattern = "(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(\S+)?"
+    match = re.match(pattern, youtube_string)
+    if not match:
+        return ""
+    youtube_id = match.groups()[5]
+    formatted = '<iframe width="560" height="315" src="https://www.youtube.com/embed/{value}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'.format(value=youtube_id)
+    return formatted
+    
+    
+    
 
 # TODO: since ALL tags must start/end with [] and [/], brackets and the forward slash should just be removed from this dict
 # TODO: and hardcoded elsewhere
@@ -67,10 +83,23 @@ tags = [
         "name": "spoiler",
         "start": "\[spoiler\]",
         "end": "[/spoiler]",
-        "output_template": """<button class="collapsible">Spoiler</button>
-<div class="content">
-  <p>{value}</p>
-</div>""",
+        "output_template": "<details><summary>Spoiler</summary>{value}</details>",
         "format_func": simple_replace
+    },
+    
+    {
+        "name": "img",
+        "start": "\[img\]",
+        "end": "[/img]",
+        "output_template": '<img src="{value}">',
+        "format_func": simple_replace
+    },
+    
+    {
+        "name": "yt",
+        "start": "\[yt\]",
+        "end": "[/yt]",
+        "output_template": "",
+        "format_func": embed_youtube
     }
 ]

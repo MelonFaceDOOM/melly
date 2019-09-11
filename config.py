@@ -20,5 +20,6 @@ class Config(object):
     THREADS_PER_PAGE = 25
     CATEGORIES_PER_PAGE = 25
     UPLOAD_FOLDER = os.path.join(basedir, "app/static/images")
+    MAX_NUMBER_OF_EMOJIS = 500
     MAX_EMOJI_SIZE = 367000
     ADMINS = ['lemmyelon@gmail.com']
