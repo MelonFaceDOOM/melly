@@ -1,0 +1,27 @@
+<table class="table category-table" style="table-layout:fixed">
+    <tr class="table-header">
+        <th class="author-and-avatar">
+            <div class="small-avatar">
+                <a href="{{ url_for('main.user', username=username) }}">
+                    {% if avatar_path %}
+                    <img class="small-avatar" src="{{ url_for('static', filename=avatar_path) }}"/>
+                    {% endif %}
+                </a>
+            </div>
+            <div class="thread-text-cell category-author">
+                <a href="{{ url_for('main.user', username=username) }}">
+                    {{ username }}
+                </a>
+            </div>
+            <div class="clear"></div>
+            {{ timestamp }}
+        </th>
+    </tr>
+    <tr>
+        <th>
+            <div style="word-wrap: break-word" class="post_body">
+                <span>{{ body |safe }}</span>
+            </div>
+        </th>
+    </tr>
+</table>

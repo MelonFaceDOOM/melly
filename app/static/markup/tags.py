@@ -40,8 +40,6 @@ def embed_youtube(tag, string):
     formatted = '<iframe width="560" height="315" src="https://www.youtube.com/embed/{value}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'.format(value=youtube_id)
     return formatted
     
-    
-    
 
 # TODO: since ALL tags must start/end with [] and [/], brackets and the forward slash should just be removed from this dict
 # TODO: and hardcoded elsewhere

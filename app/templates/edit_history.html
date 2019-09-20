@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    {% if edits %}
+        {% set username = edits[0].original_post.author.username %}
+        {% if edits[0].original_post.author.avatar_path %}
+            {% set avatar_path = edits[0].original_post.author.avatar_path %}
+        {% else %}
+            {% set avatar_path = "" %}
+        {% endif %}
+        {% set timestamp = moment(edits[0].original_post.timestamp).format('MMMM Do YYYY, h:mm:ss a') %}
+        {% set body = edits[0].body_formatted %}
+
+        {% include "_edit.html" %}
+
+        {% for edit in edits %}
+        {% if loop.index < edits.count() %}
+            {% set username = edit.editor.username %}
+            {% if edit.editor.avatar_path %}
+                {% set avatar_path = edit.editor.avatar_path %}
+            {% else %}
+                {% set avatar_path = "" %}
+            {% endif %}
+            {% set timestamp = moment(edit.timestamp).format('MMMM Do YYYY, h:mm:ss a') %}
+            {% set body = edits[loop.index].body_formatted %}
+
+            {% include "_edit.html" %}
+        {% else %}
+            {% set username = edit.editor.username %}
+            {% if edit.editor.avatar_path %}
+                {% set avatar_path = edit.editor.avatar_path %}
+            {% else %}
+                {% set avatar_path = "" %}
+            {% endif %}
+            {% set timestamp = moment(edit.timestamp).format('MMMM Do YYYY, h:mm:ss a') %}
+            {% set body =edit.original_post.body_formatted %}
+
+            {% include "_edit.html" %}
+        {% endif %}
+        {% endfor %}
+    {% endif %}
+{% endblock %}

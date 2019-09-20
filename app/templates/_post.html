@@ -1,4 +1,9 @@
-<div class="forum_post_container" id="p{{ post.id }}">
+<div class="forum_post_container"
+     {% if pinned %}
+        id="pinned_post"
+     {% else %}
+        id="p{{ post.id }}"
+     {% endif %} >
     <div class="post_author_info">
             <span class="post_author_name">
                 {% set user_link %}
@@ -19,10 +24,18 @@
     </div>
     <div class="post_content">
         <div class="post_info">
-            <a href="{{ url_for('main.thread', thread_id=post.thread.id, page=post.page(),
-                         _anchor='p' + post.id|string) }}">
+            <a href="{{ url_for('main.post', post_id=post.id) }}">
                 {{ moment(post.timestamp).format('MMMM Do YYYY, h:mm:ss a') }}
             </a>
+            <span class="post-edited-info">
+            {% if post.edits.count() > 0%}
+                <a href="{{ url_for('main.edit_history', post_id=post.id) }}">
+                    <img src="{{ url_for('static', filename='images/forum_icons/post_edited.svg')}}" height="35px">
+                    post last edited -- {{ moment(post.last_edited()).format('MMMM Do YYYY, h:mm:ss a') }}
+                </a>
+                </span>
+            {% endif %}
+            </span>
         </div>
         <div style="word-wrap: break-word" class="post_body">
             <span>{{ post.body_formatted |safe }}</span>
@@ -33,6 +46,17 @@
                 {% include '_reactions.html' %}
             </div>
             <div class="post_footer_buttons">
+                <span class="post_footer_button">
+                    {% if pinned %}
+                    <form action="{{ url_for('main.unpin_post', post_id=post.id, redirect_page=page) }}">
+                        <input type="submit" class="btn btn-outline-warning" value="Unpin">
+                    </form>
+                    {% else %}
+                    <form action="{{ url_for('main.pin_post', post_id=post.id) }}">
+                        <input type="submit" class="btn btn-outline-warning" value="Pin">
+                    </form>
+                    {% endif %}
+                </span>
                 <span class="post_footer_button">
                       <button type="button" class="btn btn-info reactButton" data-toggle="popover"
                                title="React" data-placement="left" post_id="{{ post.id }}">

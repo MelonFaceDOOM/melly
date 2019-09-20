@@ -3,7 +3,7 @@ from flask import render_template, flash, redirect, url_for, request, g, current
 from flask_login import current_user, login_required
 from app import db
 from app.main.forms import (EditProfileForm, PostForm, CreateCategoryForm, CreateThreadForm, SearchForm, MessageForm)
-from app.models import User, Post, Thread, Category, Message, PostReaction, Emoji
+from app.models import User, Post, Thread, Category, Message, PostReaction, Emoji, EditHistory
 from app.main import bp
 import os
 import re
@@ -171,6 +171,7 @@ def edit_thread(thread_id):
 @bp.route('/thread/<thread_id>', methods=['GET', 'POST'])
 @login_required
 def thread(thread_id):
+
     thread = Thread.query.filter_by(id=thread_id).first()
     # If thread is not found, return to index
     if thread is None:
@@ -207,6 +208,7 @@ def thread(thread_id):
             url_for('main.thread', thread_id=thread_id, page=page, _anchor=anchor))
 
     page = request.args.get('page', 1, type=int)
+
     posts = thread.posts.order_by(Post.timestamp.asc()).paginate(
         page, current_app.config['POSTS_PER_PAGE'], False)
 
@@ -219,7 +221,6 @@ def thread(thread_id):
                        page=posts.prev_num) \
         if posts.has_prev else None
 
-
     # add 1 view to the user's view count for this thread
     current_user.view_thread(thread=thread)
 
@@ -230,7 +231,7 @@ def thread(thread_id):
             thread=thread,
             last_viewed_timestamp=last_viewed_timestamp)
 
-    return render_template('thread.html', title=thread.title, form=form,
+    return render_template('thread.html', title=thread.title, form=form, page=page,
                            posts=posts, pinned_post=pinned_post, next_url=next_url,
                            thread=thread, prev_url=prev_url)
 
@@ -270,6 +271,50 @@ def search_emojis():
                            next_emoji_url=None, prev_emoji_url=None)
 
 
+@bp.route('/pin_post/<post_id>')
+@login_required
+def pin_post(post_id):
+    post = Post.query.filter_by(id=post_id).first()
+    if post is None:
+        flash('post {} not found.'.format(post_id))
+        return redirect(url_for('main.index'))
+
+    thread = post.thread
+    if thread is None:
+        flash('thread for post {} not found.'.format(post_id))
+        return redirect(url_for('main.index'))
+
+    thread.pinned_post = post
+    db.session.commit()
+
+    return redirect(
+        url_for('main.thread', thread_id=thread.id, page=post.page(), _anchor="pinned_post"))
+
+
+@bp.route('/unpin_post/<post_id>')
+@bp.route('/unpin_post/<post_id>/<redirect_page>')
+@login_required
+def unpin_post(post_id, redirect_page=1):
+
+    post = Post.query.filter_by(id=post_id).first()
+    if post is None:
+        flash('post {} not found.'.format(post_id))
+        return redirect(url_for('main.index'))
+
+    thread = post.thread
+    if thread is None:
+        flash('thread for post {} not found.'.format(post_id))
+        return redirect(url_for('main.index'))
+
+    thread.pinned_post = None
+    db.session.commit()
+
+    # the "unpin" button passes the page the user is currently looking at as "redirect_page", which allows us to
+    # redirect them to the samge page they were looking at when they pressed the unpin button
+    return redirect(
+        url_for('main.thread', thread_id=thread.id, page=redirect_page))
+
+
 @bp.route('/quote/<post_id>', methods=['GET', 'POST'])
 @login_required
 def quote_post(post_id):
@@ -280,7 +325,7 @@ def quote_post(post_id):
 
     thread = Post.query.filter_by(
         id=post_id).first().thread  # todo - user should be able to quote a post into any thread, not just the same
-    # thread as the original post
+                                    #  thread as the original post
     if thread is None:
         flash('thread for post {} not found.'.format(post_id))
         return redirect(url_for('main.index'))
@@ -301,6 +346,7 @@ def quote_post(post_id):
     return render_template('make_post.html', title='Quote Post', form=form, thread=thread)
 
 
+# TODO place a limit on the number of edits per post
 @bp.route('/edit_post/<post_id>', methods=['GET', 'POST'])
 @login_required
 def edit_post(post_id):
@@ -317,9 +363,12 @@ def edit_post(post_id):
     # TODO: add cancel button to PostForm
     form = PostForm()
     if form.validate_on_submit():
-        post.body = form.post.data
-        post.format()  # updates post.body_formatted
-        db.session.commit()
+
+        post.edit(new_body=form.post.data, editor=current_user)
+
+        # post.body = form.post.data
+        # post.format()  # updates post.body_formatted
+        # db.session.commit()
         flash('Your post has been edited')
         anchor = 'p' + str(post.id)
         return redirect(
@@ -329,6 +378,17 @@ def edit_post(post_id):
         form.post.data = post.body
     return render_template('make_post.html', title='Edit Your Post', form=form, thread=post.thread)
 
+
+@bp.route('/edit_history/<post_id>')
+def edit_history(post_id):
+    post = Post.query.filter_by(id=post_id).first()
+    if post is None:
+        flash('post {} not found.'.format(post_id))
+        return redirect(url_for('main.index'))
+
+    edits = post.edits.order_by(
+        EditHistory.timestamp.asc())
+    return render_template('edit_history.html', edits=edits)
 
 @bp.route('/delete_post/<post_id>')
 @login_required

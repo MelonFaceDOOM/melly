@@ -16,7 +16,9 @@
 {% block navbar %}
 <nav class="navbar navbar-default">
     <div class="container">
-        <div class="navbar-header">
+
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <div class="navbar-header">
             <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
                     data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
                 <span class="sr-only">Toggle navigation</span>
@@ -24,20 +26,15 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="{{ url_for('main.index') }}">DoD</a>
-        </div>
-        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav">
-                {% if thread %}
-                <li class="nav-link"><a href="{{ url_for('main.category',category_id=thread.category.id) }}">{{ thread.category.title
-                    }}</a></li>
-                <li class="nav-link disabled"><a href="{{ url_for('main.thread',thread_id=thread.id) }}">{{ thread.title }}</a>
-                </li>
-                {% elif category %}
-                <li class="nav-link disabled"><a href="{{ url_for('main.category',category_id=category.id) }}">{{ category.title
-                    }}</a></li>
-                {% endif %}
-            </ul>
+            <a class="navbar-brand" href="{{ url_for('main.index') }}">
+                <img class="navbar-logo" src="{{ url_for('static', filename='logo.png') }}">
+            </a>
+            </div>
+            <div class="navbar-title">
+                <a class="navbar-brand" href="{{ url_for('main.index') }}">
+                    Department of Dragons
+                </a>
+            </div>
             {% if g.search_form %}
             <form class="navbar-form navbar-left" method="get"
                   action="{{ url_for('main.search') }}">

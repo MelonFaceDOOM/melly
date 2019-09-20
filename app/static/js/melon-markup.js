@@ -44,3 +44,15 @@ $('#italics-tag').on('click', function() {
 $('#quote-tag').on('click', function() {
     insertAtCursor("post", "[quote]", "[/quote]");
 });
+
+$('#spoiler-tag').on('click', function() {
+    insertAtCursor("post", "[spoiler]", "[/spoiler]");
+});
+
+$('#image-tag').on('click', function() {
+    insertAtCursor("post", "[img]", "[/img]");
+});
+
+$('#youtube-tag').on('click', function() {
+    insertAtCursor("post", "[yt]", "[/yt]");
+});

@@ -22,6 +22,7 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(140), index=True, unique=True)
+    join_timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     password_hash = db.Column(db.String(140))
     mod_level = db.Column(db.Integer, index=True, default=1)
     posts = db.relationship('Post', backref='author', lazy='dynamic')
@@ -38,6 +39,8 @@ class User(UserMixin, db.Model):
                                         backref='recipient', lazy='dynamic')
     notifications = db.relationship('Notification', backref='user', lazy='dynamic')
     reactions_given = db.relationship('PostReaction', backref='user', lazy='dynamic')
+    edits = db.relationship('EditHistory', backref='editor', lazy='dynamic')
+    # TODO: change from editor to original author
 
 
     def __repr__(self):
@@ -195,6 +198,7 @@ class Post(SearchableMixin, db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     thread_id = db.Column(db.Integer, db.ForeignKey('thread.id'))
     reactions = db.relationship('PostReaction', backref='post', lazy='dynamic')
+    edits = db.relationship('EditHistory', backref='original_post', lazy='dynamic')
 
     def __repr__(self):
         return '<Post {}>'.format(self.body)
@@ -220,10 +224,47 @@ class Post(SearchableMixin, db.Model):
             return False
         return True
 
+    def edit(self, new_body, editor=None):
+        #TODO: check if editor is a valid user
+        history = EditHistory(
+            body=self.body,
+            body_formatted=self.body_formatted,
+            original_post=self,
+            editor=editor
+        )
+        db.session.add(history)
+        db.session.commit()
+        self.body = new_body
+        self.format()
+        db.session.commit()
+
+    def last_edited(self):
+        latest_edit = self.edits.order_by(EditHistory.timestamp.desc()).first()
+        if latest_edit:
+            return latest_edit.timestamp
+        else:
+            return None
+
+
 
 @listens_for(Post, 'before_insert')
 def post_defaults(mapper, configuration, target):
     target.body_formatted = melon_markup.parse(target.body)
+
+
+# make edit
+# new EditHistory
+# copy body, body_formatted, timestamp, post_id
+# change body of original post. Update body_formatted. Update timestamp
+
+
+class EditHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    body = db.Column(db.String(140))  # holds the pre-edit body, while the Post object gets updated with the new body
+    body_formatted = db.Column(db.String(140))
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    original_post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
+    edited_by = db.Column(db.Integer, db.ForeignKey('user.id'))
 
 
 class Thread(db.Model):
@@ -232,8 +273,10 @@ class Thread(db.Model):
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'))
-
     pinned_post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
+
+    # I can't remember why posts and pinned_post are like this, but there was something conflicting about having two
+    # different things being related to post in the normal way, and this solved it.
     posts = db.relationship('Post', backref='thread', primaryjoin=id==Post.thread_id, lazy='dynamic')
     pinned_post = db.relationship('Post', primaryjoin=pinned_post_id==Post.id)
     users_visited = db.relationship('UserThreadMetadata', backref='thread', lazy='dynamic')
