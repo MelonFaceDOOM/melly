@@ -10,7 +10,7 @@ import re
 from sqlalchemy import func
 from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
-
+from app.utils import require_mod_level
 
 @bp.before_app_request
 def before_request():
@@ -235,6 +235,13 @@ def thread(thread_id):
                            posts=posts, pinned_post=pinned_post, next_url=next_url,
                            thread=thread, prev_url=prev_url)
 
+
+@bp.route('/manage_threads')
+@login_required
+@require_mod_level(1)
+def manage_threads():
+    threads = Thread.query.all()
+    return render_template('manage_threads.html', threads=threads)
 
 @bp.route('/reaction_menu', methods=['GET'])
 @login_required

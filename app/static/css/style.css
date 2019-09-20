@@ -179,6 +179,11 @@ a:visited {
   outline: none;
   font-size: 15px;
 }
+
+table > tbody > tr > th{
+  border-bottom:1px solid black;
+  border-top:none;
+}
 /* -------------------------------------------------------------------- */
 
 
@@ -188,11 +193,6 @@ a:visited {
     min-width: 800px;
     width: 95%;
     max-width: 1280px;
-}
-
-table.category-table > tbody > tr > th{
-  border-bottom:1px solid black;
-  border-top:none;
 }
 
 .table-header{
@@ -456,6 +456,19 @@ div.clear {
 .profile-username {
     max-width: 100%;
     word-break: break-all;
+}
+/* -------------------------------------------------------------------- */
+
+/* unidentified stuff */
+/* -------------------------------------------------------------------- */
+.manage-thread-field {
+    width: 100%;
+    color: black;
+    background: grey;
+    text-align: left;
+    overflow: hidden;
+    height: 100%;
+    display: block;
 }
 /* -------------------------------------------------------------------- */
 

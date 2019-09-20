@@ -21,3 +21,4 @@ def random_donut():
 #  - "010-doughnut.svg" white centre
 #  - "089-donut-75.svg" purple centre
 #  - "083-donut-69.svg" white centre
+#  - "096-donut-79.svg" purple centre
