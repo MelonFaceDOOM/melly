@@ -492,7 +492,6 @@ div.clear {
 /* column container created by wtf form. holds login and register form fields */
 .col-md-4 {
     width: 100%;
-    max-width: 400px;
 }
 
 /* -------------------------------------------------------------------- */

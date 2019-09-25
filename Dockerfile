@@ -8,7 +8,9 @@ WORKDIR /home/melly
 COPY requirements.txt requirements.txt
 
 # for pyzmqt
-#RUN apk add build-base libzmq python3 zeromq-dev
+RUN apk add build-base libzmq python3 zeromq-dev
+RUN apk add build-base python-dev py-pip jpeg-dev zlib-dev
+ENV LIBRARY_PATH=/lib:/usr/lib
 
 # for lxml
 RUN apk add g++ libxslt-dev

@@ -334,7 +334,7 @@ class Category(db.Model):
         if regex.search(title) == None:
             return title
         else:
-            raise ValueError("Thread title can't contain special characters")
+            raise ValueError("Category title can't contain special characters")
 
     def __repr__(self):
         return '<Category {}>'.format(self.title)
