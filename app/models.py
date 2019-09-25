@@ -16,6 +16,7 @@ from sqlalchemy.event import listens_for
 from PIL import Image
 from app.static.avatars.random_avatar import random_avatar
 from app.static.images.donuts.random_donut import random_donut
+from sqlalchemy.orm import validates
 
 
 class User(UserMixin, db.Model):
@@ -32,7 +33,7 @@ class User(UserMixin, db.Model):
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
     threads_visited = db.relationship('UserThreadMetadata', backref='user', lazy='dynamic')
     last_message_read_time = db.Column(db.DateTime)
-    avatar_path = db.Column(db.String(140))
+    avatar_path = db.Column(db.String(300))
     messages_sent = db.relationship('Message', foreign_keys='Message.sender_id',
                                     backref='author', lazy='dynamic')
     messages_received = db.relationship('Message', foreign_keys='Message.recipient_id',
@@ -246,7 +247,6 @@ class Post(SearchableMixin, db.Model):
             return None
 
 
-
 @listens_for(Post, 'before_insert')
 def post_defaults(mapper, configuration, target):
     target.body_formatted = melon_markup.parse(target.body)
@@ -260,8 +260,8 @@ def post_defaults(mapper, configuration, target):
 
 class EditHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    body = db.Column(db.String(140))  # holds the pre-edit body, while the Post object gets updated with the new body
-    body_formatted = db.Column(db.String(140))
+    body = db.Column(db.String(5000))  # holds the pre-edit body, while the Post object gets updated with the new body
+    body_formatted = db.Column(db.String(10000))
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     original_post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
     edited_by = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -280,6 +280,14 @@ class Thread(db.Model):
     posts = db.relationship('Post', backref='thread', primaryjoin=id==Post.thread_id, lazy='dynamic')
     pinned_post = db.relationship('Post', primaryjoin=pinned_post_id==Post.id)
     users_visited = db.relationship('UserThreadMetadata', backref='thread', lazy='dynamic')
+
+    @validates('title')
+    def validate_title(self, key, title):
+        regex = re.compile('[@_!#$%^&*()<>?/\|}{~:]')
+        if regex.search(title) == None:
+            return title
+        else:
+            raise ValueError("Thread title can't contain special characters")
 
     def __repr__(self):
         return '<Thread {}>'.format(self.title)
@@ -319,6 +327,14 @@ class Category(db.Model):
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     threads = db.relationship('Thread', backref='category', lazy='dynamic')
+
+    @validates('title')
+    def validate_title(self, key, title):
+        regex = re.compile('[@_!#$%^&*()<>?/\|}{~:]')
+        if regex.search(title) == None:
+            return title
+        else:
+            raise ValueError("Thread title can't contain special characters")
 
     def __repr__(self):
         return '<Category {}>'.format(self.title)
@@ -369,6 +385,8 @@ class PostReaction(db.Model):
     __table_args__ = (db.UniqueConstraint('user_id', 'post_id', 'emoji_id'),
                       )
 
+
+
     def __repr__(self):
         return '<PostReaction {}>'.format(self.id)
 
@@ -376,9 +394,9 @@ class PostReaction(db.Model):
 class Emoji(db.Model):
     # stores reaction images
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(140), unique=True)
-    file_path = db.Column(db.String(140))
-    small_path = db.Column(db.String(140))
+    name = db.Column(db.String(15), unique=True)
+    file_path = db.Column(db.String(300))
+    small_path = db.Column(db.String(300))
     posts = db.relationship('PostReaction', backref='emoji', lazy='dynamic')
 
     def __repr__(self):

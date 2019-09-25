@@ -32,7 +32,7 @@ def embed_youtube(tag, string):
     end_tag_pos = string.find(tag.end)
     youtube_string = string[len(start_tag):end_tag_pos]
     
-    pattern = "(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?(\S+)?"
+    pattern = "(http:|https:)?\/\/(www\.)?(youtube.com|youtu.be)\/(watch)?(\?v=)?([\w\d]+)?(&\S+)?"
     match = re.match(pattern, youtube_string)
     if not match:
         return ""

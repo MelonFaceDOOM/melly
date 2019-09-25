@@ -3,6 +3,10 @@
 
 
 {% block app_content %}
+    <div class="thread-title-bar">
+        <a href="{{ url_for('main.category', category_id=thread.category.id) }}"> {{ thread.category.title }}</a> >
+        <a href="{{ url_for('main.thread', thread_id=thread.id, page=1) }}"> {{ thread.title }}</a>
+    </div>
     {% if pinned_post %}
         {% with pinned = True %}
             {% set post = pinned_post %}

@@ -1,7 +1,17 @@
-<label class="post_reactions">
+<label class="post_reactions" post_id="{{ post.id }}">
     {% for reaction in reactions %}
-    <div class="reaction_box" name="{{ reaction.emoji.name }}" reacter="{{ reaction.user.username }}">
-        <img class="reaction" src="{{ url_for('static', filename=reaction.emoji.small_path) }}">
-    </div>
+    {% if reaction.user == current_user %}
+        <div class="reaction_box unReact" name="{{ reaction.emoji.name }}" reacter="{{ reaction.user.username }}">
+            <a href="javascript:void(0)">
+                <img class="reaction unReact" title="{{ reaction.user.username }}"
+                     src="{{ url_for('static', filename=reaction.emoji.small_path) }}">
+            </a>
+        </div>
+    {% else %}
+        <div class="reaction_box" name="{{ reaction.emoji.name }}" reacter="{{ reaction.user.username }}">
+            <img class="reaction" title="{{ reaction.user.username }}"
+                 src="{{ url_for('static', filename=reaction.emoji.small_path) }}">
+        </div>
+    {% endif %}
     {% endfor %}
 </label>

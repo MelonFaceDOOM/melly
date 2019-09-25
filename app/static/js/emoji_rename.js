@@ -4,8 +4,10 @@ function rename_emoji(emoji_id, new_name) {
         type : 'POST',
         data: {emoji_id: emoji_id,
                 new_name: new_name},
+        error: function (req, status, error){
+            alert(req.responseText);
+        }
     });
-
 }
 
 $('.emoji-name-field').keyup(function(e) {

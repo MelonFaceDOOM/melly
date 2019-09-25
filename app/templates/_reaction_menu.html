@@ -4,12 +4,6 @@
         {% if pages %}
         <nav aria-label="...">
             <ul class="pager">
-<!--                <li class="justified{% if not prev_emoji_url %} disabled{% endif %}">-->
-<!--                    {% set page = starting_page - 1 %}-->
-<!--                    <a href="#" onclick="change_page(post_id='{{ post_id }}', page='{{ page }}'); return false;">-->
-<!--                        <span aria-hidden="true">&larr;</span>-->
-<!--                    </a>-->
-<!--                </li>-->
                 {% for page in pages %}
                     {% if page %}
                         {% if page != starting_page %}
@@ -26,12 +20,6 @@
                         <span class=ellipsis>. . . </span>
                     {% endif %}
                 {% endfor %}
-<!--                <li class="justified{% if not next_emoji_url %} disabled{% endif %}">-->
-<!--                    {% set page = starting_page + 1 %}-->
-<!--                    <a href="#" onclick="change_page(post_id='{{ post_id }}', page='{{ page }}'); return false;">-->
-<!--                        <span aria-hidden="true">&rarr;</span>-->
-<!--                    </a>-->
-<!--                </li>-->
             </ul>
         </nav>
         {% endif %}

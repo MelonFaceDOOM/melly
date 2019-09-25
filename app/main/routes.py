@@ -168,6 +168,91 @@ def edit_thread(thread_id):
     return render_template('create_thread.html', title='Edit thread Title', form=form)
 
 
+@bp.route('/manage_threads')
+@login_required
+@require_mod_level(2)
+def manage_threads():
+    floating_threads = Thread.query.filter_by(category=None).all()
+    categories = Category.query.all()
+    return render_template('manage_threads.html', categories=categories, floating_threads=floating_threads)
+
+
+#TODO:
+# implement js for these two routes
+# test the mod level decorator
+# add rename category
+# change manage_threads form so it's possible to rename a category
+# tests things like renaming categories, deleting them, etc to see what happens to children threads
+@bp.route('/rename_thread', methods=['POST'])
+@login_required
+@require_mod_level(2)
+def rename_thread():
+    thread_id = request.form['thread_id']
+    new_name = request.form['new_name']
+    thread = Thread.query.filter_by(id=thread_id).first()
+    if not thread:
+       return "thread id ({}) not found".format(thread_id), 400
+    try:
+        thread.title = new_name
+        db.session.commit()
+        return "", 204
+    except IntegrityError:
+        return "name taken", 400
+
+
+@bp.route('/move_thread', methods=['POST'])
+@login_required
+@require_mod_level(2)
+def move_thread():
+    thread_id = request.form['thread_id']
+    category_title = request.form['new_name']
+    category = Category.query.filter_by(title=category_title).first()
+    thread = Thread.query.filter_by(id=thread_id).first()
+
+    if not thread:
+       return "thread id ({}) not found".format(thread_id), 400
+
+    if not category:
+        category = Category(title=category_title, author=current_user)
+        db.session.add(category)
+        db.session.commit()
+        thread.category = category
+        db.session.commit()
+        url_for("main.manage_threads"), 200
+
+    else:
+        thread.category = category
+        db.session.commit()
+        return url_for("main.manage_threads"), 200
+
+
+@bp.route('/delete_thread/<thread_id>')
+@login_required
+@require_mod_level(2)
+def delete_thread(thread_id):
+    thread = Thread.query.filter_by(id=thread_id).first()
+    if not thread:
+       return "thread id ({}) not found".format(thread_id), 400
+    else:
+        db.session.delete(thread)
+        db.session.commit()
+        return redirect(url_for("main.manage_threads"))
+
+    
+@bp.route('/delete_category/<category_id>')
+@login_required
+@require_mod_level(2)
+def delete_category(category_id):
+    category = Category.query.filter_by(id=category_id).first()
+    if not category:
+       return "category id ({}) not found".format(category_id), 400
+    else:
+        db.session.delete(category)
+        db.session.commit()
+        return redirect(url_for("main.manage_threads"))
+
+
+
 @bp.route('/thread/<thread_id>', methods=['GET', 'POST'])
 @login_required
 def thread(thread_id):
@@ -235,13 +320,6 @@ def thread(thread_id):
                            posts=posts, pinned_post=pinned_post, next_url=next_url,
                            thread=thread, prev_url=prev_url)
 
-
-@bp.route('/manage_threads')
-@login_required
-@require_mod_level(1)
-def manage_threads():
-    threads = Thread.query.all()
-    return render_template('manage_threads.html', threads=threads)
 
 @bp.route('/reaction_menu', methods=['GET'])
 @login_required
@@ -580,14 +658,20 @@ def delete_emoji(emoji_id):
 
 @bp.route('/rename_emoji', methods=["POST"])
 @login_required
+@require_mod_level(1)
 def rename_emoji():
     emoji_id = request.form['emoji_id']
     new_name = request.form['new_name']
     emoji = Emoji.query.filter_by(id=emoji_id).first()
-    if emoji:
+    if not emoji:
+        return"emoji id ({}) not found".format(emoji_id), 400
+
+    try:
         emoji.name = new_name
         db.session.commit()
-    return "", 204
+        return "", 204
+    except IntegrityError:
+        return "name taken", 400
 
 
 # TODO: does this really need both get and post?
@@ -596,14 +680,21 @@ def rename_emoji():
 def reactions():
     post = Post.query.filter_by(id=request.form['post_id']).first()
     emoji = Emoji.query.filter_by(name=request.form['reaction_type']).first()
+    unReact = request.form['unReact']
     if post and emoji:
-        if not PostReaction.query.filter_by(post=post, emoji=emoji, user=current_user).first():
-            reaction = PostReaction(post=post, emoji=emoji, user=current_user)
-            db.session.add(reaction)
-            db.session.commit()
+        if unReact == "true":
+            reaction = PostReaction.query.filter_by(post=post, emoji=emoji, user=current_user).first()
+            if reaction:
+                db.session.delete(reaction)
+                db.session.commit()
+        else:
+            if not PostReaction.query.filter_by(post=post, emoji=emoji, user=current_user).first():
+                if not post.reactions.count() >= 42:
+                    reaction = PostReaction(post=post, emoji=emoji, user=current_user)
+                    db.session.add(reaction)
+                    db.session.commit()
 
     reactions = []
     if post:
-        # [reactions.append(r.emoji.name) for r in post.reactions]
         reactions = post.reactions
-    return render_template('_reactions.html', reactions=reactions)
+    return render_template('_reactions.html', reactions=reactions, post=post)

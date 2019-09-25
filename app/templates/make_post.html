@@ -2,7 +2,11 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-    <h1>{{ title }}</h1>
+    <div class="thread-title-bar">
+        <a href="{{ url_for('main.category', category_id=thread.category.id) }}"> {{ thread.category.title }}</a> >
+        <a href="{{ url_for('main.thread', thread_id=thread.id, page=1) }}"> {{ thread.title }}</a>
+    </div>
+    <br>
     <div class="row">
         <div class="col-mf-4">
             {{ wtf.quick_form(form) }}

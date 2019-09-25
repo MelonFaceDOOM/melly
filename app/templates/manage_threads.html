@@ -2,27 +2,33 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-    <table class="table" style="table-layout:fixed">
-        <tr class="table-header">
-            <th>
-                Thread Title
-            </th>
-            <th>
-                Category
-            </th>
-            <th></th>
-        </tr>
-        {% for thread in threads %}
-        <tr>
-            <th>
-                <textarea class="manage-thread-field" thread_id="{{ thread.id }}" name="thread_name">{{ thread.title}}</textarea>
-            </th>
-            <th>
-                <textarea class="manage-thread-field" thread_id="{{ thread.id }}" name="thread_name">{{ thread.category.title}}</textarea>
-            </th>
-            <th></th>
-        </tr>
-        {% endfor %}
-    </table>
 
+    {% for category in categories %}
+    <h3>{{ category.title }}</h3>
+    <a href="{{ url_for('main.edit_category', category_id=category.id) }}">Edit category title</a>
+    ---
+    <a href="{{ url_for('main.delete_category', category_id=category.id) }}">Delete category</a>
+
+        {% for thread in category.threads %}
+            {% include "_manage_thread_row.html" %}
+        {% endfor %}
+    {% endfor %}
+    {% if floating_threads %}
+    <h3>Threads with no Category</h3>
+        {% for thread in floating_threads %}
+            {% include "_manage_thread_row.html" %}
+        {% endfor %}
+    {% endif %}
+    <div class="row">
+        <div class="col-md-4">
+            <a href="{{ url_for('main.create_category') }}">
+                Create new discussion category
+            </a>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script src="{{ url_for('static', filename='js/manage_threads.js') }}"></script>
 {% endblock %}

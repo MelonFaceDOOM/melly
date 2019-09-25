@@ -48,9 +48,17 @@
                 {% if current_user.is_anonymous %}
                 <li class="nav-link"><a href="{{ url_for('auth.login') }}">Login</a></li>
                 {% else %}
+
+                {% if current_user.mod_level >= 2 %}
+                <li class="nav-link">
+                    <a href="{{ url_for('main.manage_threads') }}"> Manage Threads </a>
+                </li>
+                {% endif%}
+                {% if current_user.mod_level >=1 %}
                 <li class="nav-link">
                     <a href="{{ url_for('main.emojis') }}"> Emojis </a>
                 </li>
+                {% endif %}
                 <li class="nav-link">
                     <a href="{{ url_for('main.messages') }}">
                         Messages

@@ -103,7 +103,7 @@ html {
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
-    max-width: 100px;
+    max-width: 150px;
     max-height: 40px;
 }
 
@@ -268,6 +268,7 @@ div.forum_post_container {
     width: 100%;
     padding: 10px;
     background-color: var(--table-background);
+    box-shadow:0px 0px 3px 1px #000000 ;
 }
 
 div.post_author_info {
@@ -278,6 +279,7 @@ div.post_author_info {
 
 div.post_content {
     flex-grow: 1;
+    max-width: 100%;
 }
 
 div.post_info {
@@ -300,6 +302,8 @@ div.post_body {
     padding-top: 15px;
     margin-bottom: 10px;
     color: var(--text-color-body);
+    max-width: 100%;
+    word-break: break-all;
 }
 
 .post_author_name {
@@ -336,11 +340,17 @@ post_footer_buttons {
 }
 
 .post_reactions {
-    max-width:100%
+    max-width: 100%;
+    max-height: 100%;
 }
 
 .popover{
     max-width: 225px;
+}
+
+.emojiSearch {
+    width: 100%;
+    margin-bottom: 5px;
 }
 
 .emoji-grid {
@@ -349,14 +359,43 @@ post_footer_buttons {
     grid-gap: 2px;
 }
 
-.reaction_box > a > img {
+.reaction_box > a {
+    height:100%;
+    width:100%;
+}
+
+.reaction_box > a img{
+    max-height:100%;
     max-width:100%;
-    height:auto;
+}
+
+
+.reaction_box.nopadding {
+    padding: 0px;
+    margin: 0px;
+    height: 35px;
+    width: 35px;
+}
+
+div.unReact {
+    border-radius: 4px;
+    border: 1px solid #577fea;
+    background-color:rgb(76, 85, 174, 0.5);
 }
 
 #pinned_post {
     border: 2px dashed #FFC107;
     border-radius: 3px;
+}
+
+/* element used in other pages too */
+div.thread-title-bar {
+    background-color: var(--table-background);
+    font-size: 20px;
+    padding: 4px;
+    margin-bottom: 10px;
+    border: 1px solid black;
+    box-shadow:0px 0px 5px 3px #000000 ;
 }
 /* -------------------------------------------------------------------- */
 
@@ -388,20 +427,20 @@ input.submit {
 /* Also used in forum posts */
 .reaction_box {
     color: var(--text-color-body);
-    border-radius: 0px;
-    padding: 0px;
     height: 35px;
+    padding: 1px;
     width: 35px;
     float: left;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
+    margin-right: 2px;
 }
 
 .reaction_box > img {
     max-width:100%;
-    height:auto;
+    max-height:100%;
 }
 
 .emoji-name-box {
@@ -461,15 +500,41 @@ div.clear {
 
 /* unidentified stuff */
 /* -------------------------------------------------------------------- */
+.category-options {
+    background-color: grey;
+}
+
+.thread-row {
+    display: flex;
+    align-items: center;
+}
+
 .manage-thread-field {
-    width: 100%;
+    width: 400px;
     color: black;
-    background: grey;
     text-align: left;
     overflow: hidden;
-    height: 100%;
-    display: block;
 }
+
+.select-choose-category {
+    vertical-align: top;
+    max-width: 450px;
+    height: 100%;
+    color: black;
+}
+
+.select-choose-category {
+    margin-left: 5px;
+}
+
+.delete-thread > a{
+    font-weight: bold;
+    font-size: 2em;
+    line-height: 1;
+    color: red;
+    padding-left: 5px;
+}
+
 /* -------------------------------------------------------------------- */
 
 

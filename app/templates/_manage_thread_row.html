@@ -1,0 +1,17 @@
+    <div class="thread-row">
+        <span>
+            <input class="manage-thread-field" value="{{ thread.title}}"
+                   thread_id="{{ thread.id }}" name="thread_name">
+        </span>
+        <select class="select-choose-category" thread_id="{{ thread.id }}">
+            <option value="Move thread to">Move thread to</option>
+            {% for category in categories %}
+            <option value="{{ category.title }}">{{ category.title }}</option>
+            {% endfor %}
+        </select>
+        <span class="delete-thread">
+            <a href="{{ url_for('main.delete_thread', thread_id=thread.id) }}">
+                x
+            </a>
+        </span>
+    </div>
