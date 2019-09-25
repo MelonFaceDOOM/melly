@@ -184,6 +184,14 @@ table > tbody > tr > th{
   border-bottom:1px solid black;
   border-top:none;
 }
+
+#post.form-control {
+  height:300px;
+}
+
+#post.form-control.short {
+  height:170px;
+}
 /* -------------------------------------------------------------------- */
 
 
