@@ -22,7 +22,7 @@ from sqlalchemy.orm import validates
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
-    email = db.Column(db.String(140), index=True, unique=True)
+    email = db.Column(db.String(300), index=True, unique=True)
     join_timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     password_hash = db.Column(db.String(140))
     mod_level = db.Column(db.Integer, index=True, default=1)
@@ -193,8 +193,8 @@ db.event.listen(db.session, 'after_commit', SearchableMixin.after_commit)
 class Post(SearchableMixin, db.Model):
     __searchable__ = ['body']
     id = db.Column(db.Integer, primary_key=True)
-    body = db.Column(db.String(140))
-    body_formatted = db.Column(db.String(140))
+    body = db.Column(db.String(5000))
+    body_formatted = db.Column(db.String(10000))
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     thread_id = db.Column(db.Integer, db.ForeignKey('thread.id'))
