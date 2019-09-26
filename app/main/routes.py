@@ -141,7 +141,7 @@ def create_thread(category_id):
         flash('Your thread {} has been created! Make a first post!'.format(form.title.data))
         return redirect(url_for('main.thread', thread_id=thread.id))
     return render_template('create_thread.html', title='Create a new thread',
-                           category_id=category_id, form=form)
+                           category=category, form=form)
 
 
 @bp.route('/edit_thread/<thread_id>', methods=['GET', 'POST'])
@@ -256,7 +256,6 @@ def delete_category(category_id):
 @bp.route('/thread/<thread_id>', methods=['GET', 'POST'])
 @login_required
 def thread(thread_id):
-
     thread = Thread.query.filter_by(id=thread_id).first()
     # If thread is not found, return to index
     if thread is None:

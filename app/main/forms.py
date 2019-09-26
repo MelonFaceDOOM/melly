@@ -18,7 +18,7 @@ class EditProfileForm(FlaskForm):
 
     def validate_username(self, username):
         if username.data != self.original_username:
-            user = User.query.filter_by(username=self.username.data).first()
+            user = User.query.filter_by(username=username.data).first()
             if user is not None:
                 raise ValidationError('Please use a different username.')
         if len(username.data) > 64:
@@ -38,13 +38,16 @@ class CreateCategoryForm(FlaskForm):
     title = StringField('Category title', validators=[DataRequired()])
     submit = SubmitField('Submit')
 
-    def validate_title(self, category_title):
-        category = Category.query.filter_by(title=self.title.data).first()
+    def validate_title(self, title):
+        category = Category.query.filter_by(title=title.data).first()
         if category is not None:
             raise ValidationError('Please use a different category name.')
         regex = re.compile('[@_!#$%^&*()<>?/\|}{~:]')
-        if regex.search(self.title.data):
+        if regex.search(title.data):
             raise ValidationError("Category title can't contain special characters")
+
+        if len(title.data) > 140:
+            raise ValidationError("Category title cannot exceed 140 characters")
 
 
 class CreateThreadForm(FlaskForm):
@@ -56,15 +59,23 @@ class CreateThreadForm(FlaskForm):
         super(CreateThreadForm, self).__init__(*args, **kwargs)
         self.category_title = category_title
 
-    def validate_title(self, thread_title):
+    def validate_title(self, title):
         thread = Thread.query.join(Category).filter(Category.title == self.category_title,
-                                                    Thread.title == self.title.data).first()
+                                                    Thread.title == title.data).first()
         if thread is not None:
             raise ValidationError('Thread name is already in use in this category.')
 
         regex = re.compile('[@_!#$%^&*()<>?/\|}{~:]')
-        if regex.search(self.title.data):
+        if regex.search(title.data):
             raise ValueError("Thread title can't contain special characters")
+
+        if len(title.data) > 140:
+            raise ValidationError("Thread title cannot exceed 140 characters")
+
+    def validate_post(self, post):
+        if len(post.data) > 5000:
+            raise ValidationError("post body cannot exceed 5000 characters")
+
 
 class SearchForm(FlaskForm):
     q = StringField('Search', validators=[DataRequired()])

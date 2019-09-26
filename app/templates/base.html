@@ -14,29 +14,21 @@
 {% if title %}{{ title }} - tdh{% else %}Welcome to tdh{% endif %}
 {% endblock %}
 {% block navbar %}
-<nav class="navbar navbar-default">
-    <div class="container">
-
-        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
+<div class="container">
+    <nav class="navbar navbar-default">
+        <div class="navbar-header">
             <a class="navbar-brand" href="{{ url_for('main.index') }}">
                 <img class="navbar-logo" src="{{ url_for('static', filename='logo.png') }}">
             </a>
-            </div>
-            <div class="navbar-title">
-                <a class="navbar-brand" href="{{ url_for('main.index') }}">
-                    Department of Dragons
-                </a>
-            </div>
+        </div>
+        <div class="navbar-title">
+            <a class="navbar-brand" href="{{ url_for('main.index') }}">
+                Department of Dragons
+            </a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             {% if g.search_form %}
-            <form class="navbar-form navbar-left" method="get"
+            <form class="navbar-form" method="get"
                   action="{{ url_for('main.search') }}">
                 <div class="form-group">
                     {{ g.search_form.q(size=20, class='form-control',
@@ -44,41 +36,42 @@
                 </div>
             </form>
             {% endif %}
-            <ul class="nav navbar-nav navbar-right">
-                {% if current_user.is_anonymous %}
-                <li class="nav-link"><a href="{{ url_for('auth.login') }}">Login</a></li>
-                {% else %}
-
-                {% if current_user.mod_level >= 2 %}
-                <li class="nav-link">
-                    <a href="{{ url_for('main.manage_threads') }}"> Manage Threads </a>
-                </li>
-                {% endif%}
-                {% if current_user.mod_level >=1 %}
-                <li class="nav-link">
-                    <a href="{{ url_for('main.emojis') }}"> Emojis </a>
-                </li>
-                {% endif %}
-                <li class="nav-link">
-                    <a href="{{ url_for('main.messages') }}">
-                        Messages
-                        {% set new_messages = current_user.new_messages() %}
-                        {% if new_messages %}
-                        <span id="message_count" class="badge"
-                              style="visibility: {% if new_messages %}visible
-                                                   {% else %}hidden {% endif %};">
-                                {{ new_messages }}
-                            </span>
-                        {% endif %}
-                    </a>
-                </li>
-                <li class="nav-link"><a href="{{ url_for('main.user', username=current_user.username) }}">Profile</a></li>
-                <li class="nav-link"><a href="{{ url_for('auth.logout') }}">Logout</a></li>
-                {% endif %}
-            </ul>
         </div>
-    </div>
-</nav>
+        <ul class="nav navbar-nav">
+            {% if current_user.is_anonymous %}
+            <li class="nav-link"><a href="{{ url_for('auth.login') }}">Login</a></li>
+            {% else %}
+
+            {% if current_user.mod_level >= 2 %}
+            <li class="nav-link">
+                <a href="{{ url_for('main.manage_threads') }}"> Manage Threads </a>
+            </li>
+            {% endif%}
+            {% if current_user.mod_level >=1 %}
+            <li class="nav-link">
+                <a href="{{ url_for('main.emojis') }}"> Emojis </a>
+            </li>
+            {% endif %}
+            <li class="nav-link">
+                <a href="{{ url_for('main.messages') }}">
+                    Messages
+                    {% set new_messages = current_user.new_messages() %}
+                    {% if new_messages %}
+                    <span id="message_count" class="badge"
+                          style="visibility: {% if new_messages %}visible
+                                               {% else %}hidden {% endif %};">
+                            {{ new_messages }}
+                        </span>
+                    {% endif %}
+                </a>
+            </li>
+            <li class="nav-link"><a href="{{ url_for('main.user', username=current_user.username) }}">Profile</a></li>
+            <li class="nav-link"><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+
 {% endblock %}
 
 {% block content %}

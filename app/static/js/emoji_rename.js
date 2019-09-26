@@ -3,9 +3,7 @@ function rename_emoji(emoji_id, new_name) {
         url : "/rename_emoji",
         type : 'POST',
         data: {emoji_id: emoji_id,
-                new_name: new_name},
-        error: function (req, status, error){
-            alert(req.responseText);
+                new_name: new_name}
         }
     });
 }

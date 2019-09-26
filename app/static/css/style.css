@@ -31,6 +31,7 @@ html {
 .navbar-default {
 	background-color: var(--navbar-background);
 	border-color: var(--navbar-outline);
+	width: auto;
 }
 
 .navbar-header {
@@ -105,12 +106,13 @@ html {
     white-space: nowrap;
     max-width: 150px;
     max-height: 40px;
+    float:left;
 }
 
 .navbar-nav {
     position:absolute;
     right:0px;
-    bottom:0px;
+    top:0px;
 }
 
 .navbar-collapse {
@@ -119,7 +121,7 @@ html {
 
 .navbar-form {
     position:absolute;
-    top: 0px;
+    bottom: 0px;
     right: 0px;
 }
 
@@ -198,7 +200,7 @@ table > tbody > tr > th{
 /* Category/thread boxes */
 /* -------------------------------------------------------------------- */
 .container {
-    min-width: 800px;
+    min-width: 600px;
     width: 95%;
     max-width: 1280px;
 }
@@ -332,12 +334,14 @@ div.post_body {
     text-overflow: ellipsis;
 }
 
+
 div.post_footer_reactions {
     float: left;
     width: 50%;
+    height: 100%;
 }
 
-post_footer_buttons {
+.post_footer_buttons {
     float: right;
     width: 50%;
     }
