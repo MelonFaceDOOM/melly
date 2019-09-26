@@ -15,7 +15,7 @@
 {% endblock %}
 {% block navbar %}
 <div class="container">
-    <nav class="navbar navbar-default">
+    <nav class="navbar navbar-default fixed">
         <div class="navbar-header">
             <a class="navbar-brand" href="{{ url_for('main.index') }}">
                 <img class="navbar-logo" src="{{ url_for('static', filename='logo.png') }}">
@@ -25,17 +25,6 @@
             <a class="navbar-brand" href="{{ url_for('main.index') }}">
                 Department of Dragons
             </a>
-        </div>
-        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            {% if g.search_form %}
-            <form class="navbar-form" method="get"
-                  action="{{ url_for('main.search') }}">
-                <div class="form-group">
-                    {{ g.search_form.q(size=20, class='form-control',
-                    placeholder=g.search_form.q.label.text) }}
-                </div>
-            </form>
-            {% endif %}
         </div>
         <ul class="nav navbar-nav">
             {% if current_user.is_anonymous %}
