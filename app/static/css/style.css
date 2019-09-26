@@ -470,13 +470,13 @@ input.submit {
 /* -------------------------------------------------------------------- */
 div.login-box {
     float: left;
-    height: 1000px;
+    height: 400px;
+    padding-right: 200px;
 }
 
 div.about-forum {
-    max-width: 800px;
+    max-width: 500px;
     float: left;
-    padding-left: 200px;
     padding-bottom: 25px;
 }
 
